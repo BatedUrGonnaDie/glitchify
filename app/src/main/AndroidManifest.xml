@@ -11,12 +11,13 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
 
+
         <meta-data
             android:name="xposedmodule"
             android:value="true" />
         <meta-data
             android:name="xposeddescription"
-            android:value="Various tweaks from popular Twitch.tv browser addons." />
+            android:value="Various tweaks for the official twitch.tv app" />
         <meta-data
             android:name="xposedminversion"
             android:value="53" />
