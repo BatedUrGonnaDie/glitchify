@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">Glitchify</string>
+
+    <string name="preference_ffz">FrankerFaceZ</string>
+    <string name="preference_ffz_emotes_enable">ffz_emotes_enable</string>
+    <string name="preference_ffz_emotes_title">Enable Emotes</string>
+    <string name="preference_ffz_emotes_summary">Show FFZ emotes throughout the twitch app</string>
+
+    <string name="preference_bttv">BetterTwitchTV</string>
+    <string name="preference_bttv_emotes_enable">bttv_emotes_enable</string>
+    <string name="preference_bttv_emotes_title">Enable Emotes</string>
+    <string name="preference_bttv_emotes_summary">Show BTTV emotes throughout the twitch app</string>
+</resources>
