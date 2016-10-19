@@ -11,7 +11,6 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.HashMap;
@@ -44,8 +43,6 @@ public class Main implements IXposedHookLoadPackage {
         final boolean prefFFZEmotes  = pref.getBoolean("ffz_emotes_enable", true);
         final boolean prefBTTVEmotes = pref.getBoolean("bttv_emotes_enable", true);
 
-        XposedBridge.log("LoN: FFZ Emotes set to " + String.valueOf(prefFFZEmotes));
-
         final Class<?> chatMessageClass = findClass("tv.twitch.chat.ChatMessage", lpparam.classLoader);
         final Class<?> channelModelClass = findClass("tv.twitch.android.models.ChannelModel", lpparam.classLoader);
 
@@ -53,7 +50,6 @@ public class Main implements IXposedHookLoadPackage {
             @Override
             protected void afterHookedMethod(MethodHookParam param) throws Throwable {
                 StringBuilder chatMsg = (StringBuilder) param.args[2];
-                XposedBridge.log("LoN: " + chatMsg.toString());
                 twitchBadgeHash = (HashMap) getObjectField(param.thisObject, "c");
                 twitchEmoteHash = (HashMap) getObjectField(param.thisObject, "b");
                 twitchMentionHash = (HashMap) getObjectField(param.thisObject, "d");
@@ -67,12 +63,6 @@ public class Main implements IXposedHookLoadPackage {
                 if (prefBTTVEmotes) {
                     injectEmotes(chatMsg, bttvRoomEmotes);
                 }
-                XposedBridge.log(twitchBadgeHash.toString());
-                XposedBridge.log(twitchEmoteHash.toString());
-                XposedBridge.log(twitchMentionHash.toString());
-                XposedBridge.log(twitchLinkHash.toString());
-                XposedBridge.log(twitchBitsHash.toString());
-                XposedBridge.log("LoN: " + chatMsg.toString());
             }
         });
 
