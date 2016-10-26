@@ -8,11 +8,14 @@ import de.robv.android.xposed.XposedBridge;
 import de.robv.android.xposed.callbacks.XC_LoadPackage.LoadPackageParam;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Hashtable;
 
@@ -22,8 +25,10 @@ public class Main implements IXposedHookLoadPackage {
 
     private Hashtable<String, String> ffzRoomEmotes = new Hashtable<>();
     private Hashtable<String, String> ffzGlobalEmotes = new Hashtable<>();
+    private Hashtable<String, Hashtable<String, Object>> ffzBadges = new Hashtable<>();
     private Hashtable<String, String> bttvRoomEmotes = new Hashtable<>();
     private Hashtable<String, String> bttvGlobalEmotes = new Hashtable<>();
+    private Hashtable<String, Hashtable<String, Object>> bttvBadges = new Hashtable<>();
     public static String ffzAPIURL = "https://api.frankerfacez.com/v1/";
     public static String bttvAPIURL = "https://api.betterttv.net/2/";
     private HashMap<Integer, Object> twitchBadgeHash = null;
@@ -31,6 +36,7 @@ public class Main implements IXposedHookLoadPackage {
     private HashMap<Integer, Object> twitchMentionHash = null;
     private HashMap<Integer, Object> twitchLinkHash = null;
     private HashMap<Integer, Object> twitchBitsHash = null;
+    private String chatSender;
 
     public void handleLoadPackage(final LoadPackageParam lpparam) throws Throwable {
         if (!lpparam.packageName.equals("tv.twitch.android.app")) {
@@ -41,27 +47,86 @@ public class Main implements IXposedHookLoadPackage {
         pref.makeWorldReadable();
         pref.reload();
         final boolean prefFFZEmotes  = pref.getBoolean("ffz_emotes_enable", true);
+        final boolean prefFFZBadges  = pref.getBoolean("ffz_badges_enable", true);
         final boolean prefBTTVEmotes = pref.getBoolean("bttv_emotes_enable", true);
+        final boolean prefBTTVBadges = pref.getBoolean("bttv_badges_enable", true);
 
-        final Class<?> chatMessageClass = findClass("tv.twitch.chat.ChatMessage", lpparam.classLoader);
+        Thread globalThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    if (prefFFZEmotes) {
+                        getFFZGlobalEmotes();
+                    }
+                } catch (Exception e) {
+                    printException(e, "Error fetching global FFZ emotes > ");
+                }
+                try {
+                    if (prefBTTVEmotes) {
+                        getBTTVGlobalEmotes();
+                    }
+                } catch (Exception e) {
+                    printException(e, "Error fetching global BTTV emotes > ");
+                }
+                try {
+                    if (prefFFZBadges) {
+                        getFFZBadges();
+                    }
+                } catch (Exception e) {
+                    printException(e, "Error fetching global FFZ badges > ");
+                }
+                try {
+                    if (prefBTTVBadges) {
+                        getBTTVBadges();
+                    }
+                } catch (Exception e) {
+                    printException(e, "Error fetching global BTTV badges > ");
+                }
+            }
+        });
+        globalThread.start();
+
         final Class<?> channelModelClass = findClass("tv.twitch.android.models.ChannelModel", lpparam.classLoader);
+        final Class<?> chatMsgBuilderClass = findClass("tv.twitch.android.social.a", lpparam.classLoader);
 
-        findAndHookMethod("tv.twitch.android.social.a", lpparam.classLoader, "a", boolean.class, chatMessageClass, StringBuilder.class, new XC_MethodHook() {
+        XposedBridge.hookAllMethods(chatMsgBuilderClass, "a", new XC_MethodHook() {
+            @Override
+            protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+                if (param.args.length > 3) {
+                    chatSender = ((String) getObjectField(param.args[0], "userName")).toLowerCase();
+                    return;
+                }
+            }
             @Override
             protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                if (param.args.length != 3) {
+                    return;
+                }
+
                 StringBuilder chatMsg = (StringBuilder) param.args[2];
                 twitchBadgeHash = (HashMap) getObjectField(param.thisObject, "c");
                 twitchEmoteHash = (HashMap) getObjectField(param.thisObject, "b");
                 twitchMentionHash = (HashMap) getObjectField(param.thisObject, "d");
                 twitchLinkHash = (HashMap) getObjectField(param.thisObject, "e");
                 twitchBitsHash = (HashMap) getObjectField(param.thisObject, "f");
-                // key = index_in_string, value = url
-                if (prefFFZEmotes) {
-                    injectEmotes(chatMsg, ffzGlobalEmotes);
-                    injectEmotes(chatMsg, ffzRoomEmotes);
-                }
-                if (prefBTTVEmotes) {
-                    injectEmotes(chatMsg, bttvRoomEmotes);
+                XposedBridge.log("LoN: " + chatMsg.toString());
+                if (param.args[0] instanceof Boolean) {
+                    if (prefFFZEmotes) {
+                        injectEmotes(chatMsg, ffzGlobalEmotes);
+                        injectEmotes(chatMsg, ffzRoomEmotes);
+                    }
+                    if (prefBTTVEmotes) {
+                        injectEmotes(chatMsg, bttvGlobalEmotes);
+                        injectEmotes(chatMsg, bttvRoomEmotes);
+                    }
+
+                } else {
+                    if (prefFFZBadges) {
+                        //injectBadges(chatMsg, ffzBadges);
+                    }
+                    if (prefBTTVBadges) {
+                        //injectBadges(chatMsg, bttvBadges);
+                    }
                 }
             }
         });
@@ -69,63 +134,55 @@ public class Main implements IXposedHookLoadPackage {
         findAndHookMethod("tv.twitch.android.social.widgets.ChatWidget", lpparam.classLoader, "a", channelModelClass, String.class, new XC_MethodHook() {
             @Override
             protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                if (param.args[1] == null) {
+                    return;
+                }
                 Object channelModel = getObjectField(param.thisObject, "v");
-                String game = (String) getObjectField(channelModel, "g");
-                String status = (String) getObjectField(channelModel, "h");
                 final String channel = (String) getObjectField(channelModel, "e");
-                Thread ffzRoomThread = new Thread(new Runnable() {
+                Thread roomThread = new Thread(new Runnable() {
                     @Override
                     public void run() {
                         try {
-                            getFFZRoomEmotes(channel);
-                        } catch (Exception e) {
-                            if (e.getMessage() == null || e.getMessage().equals("")) {
-                                return;
+                            if (prefFFZEmotes) {
+                                getFFZRoomEmotes(channel);
                             }
-                            XposedBridge.log(e.getMessage());
+                        } catch (Exception e) {
+                            printException(e, "Error fetching FFZ emotes for " + channel + " > ");
+                        }
+                        try {
+                            if (prefBTTVEmotes) {
+                                getBTTVRoomEmotes(channel);
+                            }
+                        } catch (Exception e) {
+                            printException(e, "Error fetching BTTV emotes for " + channel + " > ");
                         }
                     }
                 });
-                ffzRoomThread.start();
-                if ((prefFFZEmotes && ffzGlobalEmotes.isEmpty()) || (prefBTTVEmotes && bttvGlobalEmotes.isEmpty())) {
-                    Thread ffzGlobalThread = new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-                            try {
-                                if (prefFFZEmotes) {
-                                    getFFZGlobalEmotes();
-                                }
-                                if (prefBTTVEmotes) {
-                                    getBTTVGlobalEmotes();
-                                }
-                            } catch (Exception e) {
-                                if (e.getMessage() == null || e.getMessage().equals("")) {
-                                    return;
-                                }
-                                XposedBridge.log(e.getMessage());
-                            }
-                        }
-                    });
-                    ffzGlobalThread.start();
-                }
-                if (prefBTTVEmotes) {
-                    Thread bttvRoomThread = new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-                            try {
-                                getBTTVRoomEmotes(channel);
-                            } catch (Exception e) {
-                                if (e.getMessage() == null || e.getMessage().equals("")) {
-                                    return;
-                                }
-                                XposedBridge.log(e.getMessage());
-                            }
-                        }
-                    });
-                    bttvRoomThread.start();
-                }
+                roomThread.start();
             }
         });
+    }
+
+    private void injectBadges(StringBuilder chatMsg, Hashtable customBadges) {
+        if (twitchBadgeHash.size() > 2) {
+            // Already at 3 badges, anymore will clog up chat box
+            return;
+        }
+        int location = (twitchBadgeHash.size() * 2);
+        for (Object key : customBadges.keySet()) {
+            String keyString = (String) key;
+            if (!((ArrayList) ((Hashtable) customBadges.get(keyString)).get("users")).contains(chatSender)) {
+                continue;
+            }
+            String url = (String) ((Hashtable) customBadges.get(keyString)).get("image");
+            XposedBridge.log("LoN: " + url);
+            chatMsg.append(". ");
+            twitchBadgeHash.put(location, url);
+        }
+    }
+
+    private void hideBadge(StringBuilder chatMsg, String badgeKey) {
+
     }
 
     private void injectEmotes(StringBuilder chatMsg, Hashtable customEmoteHash) {
@@ -169,6 +226,12 @@ public class Main implements IXposedHookLoadPackage {
     private void getFFZRoomEmotes(String channel) throws Exception {
         URL roomURL = new URL(ffzAPIURL + "room/" + channel);
         JSONObject roomEmotes = getJSON(roomURL);
+        try {
+            int status = roomEmotes.getInt("status");
+            if (status == 404) {
+                return;
+            }
+        } catch (JSONException e) {}
         int set = roomEmotes.getJSONObject("room").getInt("set");
         JSONArray roomEmoteArray = roomEmotes.getJSONObject("sets").getJSONObject(Integer.toString(set)).getJSONArray("emoticons");
         for (int i = 0; i < roomEmoteArray.length(); ++i) {
@@ -191,6 +254,23 @@ public class Main implements IXposedHookLoadPackage {
                 ffzGlobalEmotes.put(emoteName, "https:" + emoteURL);
             }
         }
+    }
+
+    private void getFFZBadges() throws Exception {
+        URL badgeURL = new URL(ffzAPIURL + "badges");
+        JSONObject badges = getJSON(badgeURL);
+        JSONArray badgesList = badges.getJSONArray("badges");
+        for (int i = 0; i < badgesList.length(); ++i) {
+            String name = badgesList.getJSONObject(i).getString("name");
+            ffzBadges.put(name, new Hashtable<String, Object>());
+            ffzBadges.get(name).put("image", "https:" + badgesList.getJSONObject(i).getString("image"));
+            ffzBadges.get(name).put("users", new ArrayList<String>());
+            JSONArray userList = badges.getJSONObject("users").getJSONArray(badgesList.getJSONObject(i).getString("id"));
+            for (int j = 0; j < userList.length(); ++j) {
+                ((ArrayList) ffzBadges.get(name).get("users")).add(userList.getString(j).toLowerCase());
+            }
+        }
+        ((ArrayList) ffzBadges.get("developer").get("users")).add("batedurgonnadie");
     }
 
     private void getBTTVGlobalEmotes() throws Exception {
@@ -228,11 +308,38 @@ public class Main implements IXposedHookLoadPackage {
         }
     }
 
+    private void getBTTVBadges() throws Exception {
+        URL badgeURL = new URL(bttvAPIURL + "badges");
+        JSONObject badges = getJSON(badgeURL);
+        if (badges.getInt("status") != 200) {
+            XposedBridge.log("Error fetching bttv badges");
+            return;
+        }
+        JSONArray users = badges.getJSONArray("badges");
+        JSONArray badgesList = badges.getJSONArray("types");
+        for (int i = 0; i < badgesList.length(); ++i) {
+            String name = badgesList.getJSONObject(i).getString("name");
+            bttvBadges.put(name, new Hashtable<String, Object>());
+            bttvBadges.get(name).put("image", badgesList.getJSONObject(i).getString("svg"));
+            bttvBadges.get(name).put("users", new ArrayList<String>());
+        }
+        for (int i = 0; i < users.length(); ++i) {
+            String name = users.getJSONObject(i).getString("type");
+            ((ArrayList) bttvBadges.get(name).get("users")).add(users.getJSONObject(i).getString("name"));
+        }
+    }
+
     private JSONObject getJSON(URL url) throws Exception {
         HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
         conn.setRequestMethod("GET");
         conn.setRequestProperty("User-Agent", "Glitchify|bated@leagueofnewbs.com");
-        BufferedReader buffReader = new BufferedReader(new InputStreamReader(url.openStream()));
+        InputStream inStream;
+        if (conn.getResponseCode() >= 400) {
+            inStream = conn.getErrorStream();
+        } else {
+            inStream = conn.getInputStream();
+        }
+        BufferedReader buffReader = new BufferedReader(new InputStreamReader(inStream));
         StringBuilder jsonString = new StringBuilder();
         String line;
         while ((line = buffReader.readLine()) != null) {
@@ -240,6 +347,19 @@ public class Main implements IXposedHookLoadPackage {
         }
         buffReader.close();
         return new JSONObject(jsonString.toString());
+    }
+
+    private void printException(Exception e, String prefix) {
+        if (e.getMessage() == null || e.getMessage().equals("")) {
+            return;
+        }
+        String output = "LoN: ";
+        if (prefix != null) {
+            output += prefix;
+        }
+        output += e.getMessage();
+        XposedBridge.log(output);
+        XposedBridge.log(e);
     }
 
 }
