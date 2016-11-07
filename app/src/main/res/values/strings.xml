@@ -8,7 +8,7 @@
 
     <string name="preference_ffz_badges">FrankerFaceZ</string>
     <string name="preference_ffz_badges_enable">ffz_badges_enable</string>
-    <string name="preference_ffz_badges_title">Enable FFZ Badges</string>
+    <string name="preference_ffz_badges_title">Enable Badges</string>
     <string name="preference_ffz_badges_summary">Show badges in chat</string>
 
 
@@ -21,4 +21,10 @@
     <string name="preference_bttv_badges_enable">bttv_badges_enable</string>
     <string name="preference_bttv_badges_title">Enable Badges</string>
     <string name="preference_bttv_badges_summary">Show badges in chat</string>
+
+
+    <string name="preference_badge_hiding">Badge Hiding</string>
+    <string name="preference_badge_hiding_enable">badge_hiding_enable</string>
+    <string name="preference_badge_hiding_title">Badges to Hide</string>
+    <string name="preference_badge_hiding_summary">List of badges separated by commas</string>
 </resources>

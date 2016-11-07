@@ -27,6 +27,14 @@
             android:title="@string/preference_bttv_badges_title" />
     </PreferenceCategory>
 
+    <PreferenceCategory android:title="@string/preference_badge_hiding">
+        <EditTextPreference
+            android:defaultValue=""
+            android:key="@string/preference_badge_hiding_enable"
+            android:summary="@string/preference_badge_hiding_summary"
+            android:title="@string/preference_badge_hiding_title" />
+    </PreferenceCategory>
+
 
 
 </PreferenceScreen>

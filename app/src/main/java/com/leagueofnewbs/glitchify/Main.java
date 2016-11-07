@@ -29,6 +29,7 @@ public class Main implements IXposedHookLoadPackage {
     private Hashtable<String, String> bttvRoomEmotes = new Hashtable<>();
     private Hashtable<String, String> bttvGlobalEmotes = new Hashtable<>();
     private Hashtable<String, Hashtable<String, Object>> bttvBadges = new Hashtable<>();
+    private Hashtable<String, String> hiddenBadges = new Hashtable<>();
     public static String ffzAPIURL = "https://api.frankerfacez.com/v1/";
     public static String bttvAPIURL = "https://api.betterttv.net/2/";
     private HashMap<Integer, Object> twitchBadgeHash = null;
@@ -50,6 +51,10 @@ public class Main implements IXposedHookLoadPackage {
         final boolean prefFFZBadges  = pref.getBoolean("ffz_badges_enable", true);
         final boolean prefBTTVEmotes = pref.getBoolean("bttv_emotes_enable", true);
         final boolean prefBTTVBadges = pref.getBoolean("bttv_badges_enable", true);
+        final String prefBadgeHiding = pref.getString("badge_hiding_enable", "");
+        for (Object key : prefBadgeHiding.split(",")) {
+            hiddenBadges.put(((String) key).trim(), "");
+        }
 
         Thread globalThread = new Thread(new Runnable() {
             @Override
@@ -93,8 +98,10 @@ public class Main implements IXposedHookLoadPackage {
             @Override
             protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
                 if (param.args.length > 3) {
-                    chatSender = ((String) getObjectField(param.args[0], "userName")).toLowerCase();
-                    return;
+                    Object name = getObjectField(param.args[0], "userName");
+                    if (name != null) {
+                        chatSender = ((String) name).toLowerCase();
+                    }
                 }
             }
             @Override
@@ -109,7 +116,7 @@ public class Main implements IXposedHookLoadPackage {
                 twitchMentionHash = (HashMap) getObjectField(param.thisObject, "d");
                 twitchLinkHash = (HashMap) getObjectField(param.thisObject, "e");
                 twitchBitsHash = (HashMap) getObjectField(param.thisObject, "f");
-                XposedBridge.log("LoN: " + chatMsg.toString());
+                // XposedBridge.log("LoN: " + chatMsg.toString());
                 if (param.args[0] instanceof Boolean) {
                     if (prefFFZEmotes) {
                         injectEmotes(chatMsg, ffzGlobalEmotes);
@@ -122,10 +129,10 @@ public class Main implements IXposedHookLoadPackage {
 
                 } else {
                     if (prefFFZBadges) {
-                        //injectBadges(chatMsg, ffzBadges);
+                        injectBadges(chatMsg, ffzBadges);
                     }
                     if (prefBTTVBadges) {
-                        //injectBadges(chatMsg, bttvBadges);
+                        injectBadges(chatMsg, bttvBadges);
                     }
                 }
             }
@@ -164,18 +171,20 @@ public class Main implements IXposedHookLoadPackage {
     }
 
     private void injectBadges(StringBuilder chatMsg, Hashtable customBadges) {
-        if (twitchBadgeHash.size() > 2) {
-            // Already at 3 badges, anymore will clog up chat box
+        if (chatSender == null) {
             return;
         }
-        int location = (twitchBadgeHash.size() * 2);
         for (Object key : customBadges.keySet()) {
+            if (twitchBadgeHash.size() > 2) {
+                // Already at 3 badges, anymore will clog up chat box
+                return;
+            }
             String keyString = (String) key;
             if (!((ArrayList) ((Hashtable) customBadges.get(keyString)).get("users")).contains(chatSender)) {
                 continue;
             }
+            int location = (twitchBadgeHash.size() * 2);
             String url = (String) ((Hashtable) customBadges.get(keyString)).get("image");
-            XposedBridge.log("LoN: " + url);
             chatMsg.append(". ");
             twitchBadgeHash.put(location, url);
         }
@@ -223,6 +232,11 @@ public class Main implements IXposedHookLoadPackage {
         }
     }
 
+    private void getTwitchBadges() throws Exception {
+        URL badgeURL = new URL("https://badges.twitch.tv/v1/badges/global/display?language=en");
+        JSONObject badges = getJSON(badgeURL);
+    }
+
     private void getFFZRoomEmotes(String channel) throws Exception {
         URL roomURL = new URL(ffzAPIURL + "room/" + channel);
         JSONObject roomEmotes = getJSON(roomURL);
@@ -263,7 +277,13 @@ public class Main implements IXposedHookLoadPackage {
         for (int i = 0; i < badgesList.length(); ++i) {
             String name = badgesList.getJSONObject(i).getString("name");
             ffzBadges.put(name, new Hashtable<String, Object>());
-            ffzBadges.get(name).put("image", "https:" + badgesList.getJSONObject(i).getString("image"));
+            String imageLocation = "";
+            switch(name) {
+                case "developer": { imageLocation = "https://leagueofnewbs.com/images/ffz-dev.png"; break; }
+                case "supporter": { imageLocation = "https://leagueofnewbs.com/images/ffz-supporter.png"; break; }
+                case "bot": { imageLocation = "https://leagueofnewbs.com/images/ffz-bot.png"; break; }
+            }
+            ffzBadges.get(name).put("image", imageLocation);
             ffzBadges.get(name).put("users", new ArrayList<String>());
             JSONArray userList = badges.getJSONObject("users").getJSONArray(badgesList.getJSONObject(i).getString("id"));
             for (int j = 0; j < userList.length(); ++j) {
@@ -320,19 +340,30 @@ public class Main implements IXposedHookLoadPackage {
         for (int i = 0; i < badgesList.length(); ++i) {
             String name = badgesList.getJSONObject(i).getString("name");
             bttvBadges.put(name, new Hashtable<String, Object>());
-            bttvBadges.get(name).put("image", badgesList.getJSONObject(i).getString("svg"));
+            String imageLocation = "";
+            switch(name) {
+                case "developer": { imageLocation = "https://leagueofnewbs.com/images/bttv-dev.png"; break; }
+                case "support": { imageLocation = "https://leagueofnewbs.com/images/bttv-support.png"; break; }
+                case "design": { imageLocation = "https://leagueofnewbs.com/images/bttv-design.png"; break; }
+                case "emotes": { imageLocation = "https://leagueofnewbs.com/images/bttv-approver.png"; break; }
+            }
+            bttvBadges.get(name).put("image", imageLocation);
             bttvBadges.get(name).put("users", new ArrayList<String>());
         }
         for (int i = 0; i < users.length(); ++i) {
             String name = users.getJSONObject(i).getString("type");
             ((ArrayList) bttvBadges.get(name).get("users")).add(users.getJSONObject(i).getString("name"));
         }
+        ((ArrayList) bttvBadges.get("developer").get("users")).add("batedurgonnadie");
     }
 
     private JSONObject getJSON(URL url) throws Exception {
         HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
         conn.setRequestMethod("GET");
         conn.setRequestProperty("User-Agent", "Glitchify|bated@leagueofnewbs.com");
+        if (url.getHost().contains("twitch.tv")) {
+            conn.setRequestProperty("Client-ID", "2pvhvz6iubpg0ny77pyb1qrjynupjdu");
+        }
         InputStream inStream;
         if (conn.getResponseCode() >= 400) {
             inStream = conn.getErrorStream();
