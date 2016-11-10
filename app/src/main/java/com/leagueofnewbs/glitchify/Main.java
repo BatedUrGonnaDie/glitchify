@@ -254,13 +254,14 @@ public class Main implements IXposedHookLoadPackage {
                 if (!found) { continue; }
                 Integer badgeKey = 0;
                 for (Object tmpKey : twitchBadgeHash.keySet()) {
-                    if (twitchBadgeHash.get(tmpKey) == badgeURL) {
+                    if (twitchBadgeHash.get(tmpKey).equals(badgeURL)) {
                         badgeKey = (Integer) tmpKey;
                         break;
                     }
                 }
                 twitchBadgeHash.remove(badgeKey);
-                chatMsg.replace(0, 2, "");
+                chatMsg.replace(badgeKey, badgeKey + 2, "");
+                correctIndexes(badgeKey, badgeKey + 2);
                 break;
             }
         }
