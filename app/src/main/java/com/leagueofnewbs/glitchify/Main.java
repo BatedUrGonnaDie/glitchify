@@ -270,12 +270,10 @@ public class Main implements IXposedHookLoadPackage {
     private void injectEmotes(StringBuilder chatMsg, Hashtable customEmoteHash) {
         for (Object key : customEmoteHash.keySet()) {
             String keyString = (String) key;
-            int location = chatMsg.indexOf(keyString);
+            int location = 0;
             int keyLength = keyString.length();
-            if (location == -1) {
-                continue;
-            }
             while ((location = chatMsg.indexOf(keyString, location)) != -1) {
+                if (location != 0 && chatMsg.charAt(location - 1) != ' ') { continue; }
                 chatMsg.replace(location, location + keyLength, ".");
                 twitchEmoteHash.put(location, customEmoteHash.get(keyString).toString());
                 correctIndexes(location, keyLength);
@@ -369,12 +367,7 @@ public class Main implements IXposedHookLoadPackage {
         for (int i = 0; i < badgesList.length(); ++i) {
             String name = "ffz-" + badgesList.getJSONObject(i).getString("name");
             ffzBadges.put(name, new Hashtable<String, Object>());
-            String imageLocation = "";
-            switch(name) {
-                case "ffz-developer": { imageLocation = "https://leagueofnewbs.com/images/ffz-dev.png"; break; }
-                case "ffz-supporter": { imageLocation = "https://leagueofnewbs.com/images/ffz-supporter.png"; break; }
-                case "ffz-bot": { imageLocation = "https://leagueofnewbs.com/images/ffz-bot.png"; break; }
-            }
+            String imageLocation = "https:" + badgesList.getJSONObject(i).getJSONObject("urls").getString("2") + "/solid";
             ffzBadges.get(name).put("image", imageLocation);
             ffzBadges.get(name).put("users", new ArrayList<String>());
             JSONArray userList = badges.getJSONObject("users").getJSONArray(badgesList.getJSONObject(i).getString("id"));
