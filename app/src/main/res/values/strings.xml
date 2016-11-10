@@ -11,6 +11,11 @@
     <string name="preference_ffz_badges_title">Enable Badges</string>
     <string name="preference_ffz_badges_summary">Show badges in chat</string>
 
+    <string name="preference_ffz_mod">FrankerFaceZ</string>
+    <string name="preference_ffz_mod_enable">ffz_mod_enable</string>
+    <string name="preference_ffz_mod_title">Enable Custom Moderator Badges</string>
+    <string name="preference_ffz_mod_summary">Show custom mod badge in channels that have one</string>
+
 
     <string name="preference_bttv">BetterTwitchTV</string>
     <string name="preference_bttv_emotes_enable">bttv_emotes_enable</string>

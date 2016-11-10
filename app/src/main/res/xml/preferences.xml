@@ -12,6 +12,11 @@
             android:key="@string/preference_ffz_badges_enable"
             android:summary="@string/preference_ffz_badges_summary"
             android:title="@string/preference_ffz_badges_title" />
+        <SwitchPreference
+            android:defaultValue="true"
+            android:key="@string/preference_ffz_mod_enable"
+            android:summary="@string/preference_ffz_mod_summary"
+            android:title="@string/preference_ffz_mod_title" />
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/preference_bttv">
