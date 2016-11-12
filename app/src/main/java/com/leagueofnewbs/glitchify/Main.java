@@ -16,9 +16,11 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.TreeMap;
 
 import javax.net.ssl.HttpsURLConnection;
 
@@ -55,6 +57,7 @@ public class Main implements IXposedHookLoadPackage {
         final boolean prefFFZModBadge = pref.getBoolean("ffz_mod_enable", true);
         final boolean prefBTTVEmotes = pref.getBoolean("bttv_emotes_enable", true);
         final boolean prefBTTVBadges = pref.getBoolean("bttv_badges_enable", true);
+        final boolean prefBitsCombine = pref.getBoolean("bits_combine_enable", true);
         final String prefBadgeHiding = pref.getString("badge_hiding_enable", "");
         if (!prefBadgeHiding.equals("")) {
             for (Object key : prefBadgeHiding.split(",")) {
@@ -129,7 +132,7 @@ public class Main implements IXposedHookLoadPackage {
                 twitchMentionHash = (HashMap) getObjectField(param.thisObject, "d");
                 twitchLinkHash = (HashMap) getObjectField(param.thisObject, "e");
                 twitchBitsHash = (HashMap) getObjectField(param.thisObject, "f");
-                // XposedBridge.log("LoN: " + chatMsg.toString());
+                //XposedBridge.log("LoN: " + chatMsg.toString());
                 if (param.args[0] instanceof Boolean) {
                     if (prefFFZEmotes) {
                         injectEmotes(chatMsg, ffzGlobalEmotes);
@@ -139,7 +142,9 @@ public class Main implements IXposedHookLoadPackage {
                         injectEmotes(chatMsg, bttvGlobalEmotes);
                         injectEmotes(chatMsg, bttvRoomEmotes);
                     }
-
+                    if (prefBitsCombine) {
+                        combineBits(chatMsg);
+                    }
                 } else {
                     if (prefFFZModBadge && customModBadge != null) {
                         replaceModBadge(chatMsg);
@@ -154,7 +159,7 @@ public class Main implements IXposedHookLoadPackage {
                         injectBadges(chatMsg, bttvBadges);
                     }
                 }
-                // XposedBridge.log("LoN: " + chatMsg.toString());
+                //XposedBridge.log("LoN: " + chatMsg.toString());
             }
         });
 
@@ -164,7 +169,7 @@ public class Main implements IXposedHookLoadPackage {
                 if (param.args[1] == null) {
                     return;
                 }
-                Object channelModel = getObjectField(param.thisObject, "v");
+                Object channelModel = getObjectField(param.thisObject, "u");
                 final String channel = (String) getObjectField(channelModel, "e");
                 Thread roomThread = new Thread(new Runnable() {
                     @Override
@@ -282,6 +287,30 @@ public class Main implements IXposedHookLoadPackage {
         }
     }
 
+    private void combineBits(StringBuilder chatMsg) {
+        if (twitchBitsHash.isEmpty()) { return; }
+        int totalBits = 0;
+        TreeMap<Integer, Object> bitTree = new TreeMap<>(Collections.<Integer>reverseOrder());
+        bitTree.putAll(twitchBitsHash);
+        Object tmpBitObj = new Object();
+        for (Object key : bitTree.keySet()) {
+            Integer location = (Integer) key;
+            tmpBitObj = twitchBitsHash.get(key);
+            int bitAmount = (Integer) getObjectField(tmpBitObj, "numBits");
+            totalBits += bitAmount;
+            int length = String.valueOf(bitAmount).length() + 2;
+            chatMsg.replace(location, location + length + 1, "");
+        }
+        twitchBitsHash.clear();
+        setObjectField(tmpBitObj, "numBits", totalBits);
+        setObjectField(tmpBitObj, "text", "cheer" + String.valueOf(totalBits));
+        if (chatMsg.charAt(chatMsg.length() - 1) != ' ') {
+            chatMsg.append(" ");
+        }
+        twitchBitsHash.put(chatMsg.length(), tmpBitObj);
+        chatMsg.append("  ").append(totalBits);
+    }
+
     private void correctIndexes(int locationStart, int locationLength) {
         HashMap<Integer, Object>[] twitchHashes = new HashMap[5];
         twitchHashes[0] = twitchBadgeHash;
@@ -375,7 +404,7 @@ public class Main implements IXposedHookLoadPackage {
                 ((ArrayList) ffzBadges.get(name).get("users")).add(userList.getString(j).toLowerCase());
             }
         }
-        // ((ArrayList) ffzBadges.get("ffz-developer").get("users")).add("batedurgonnadie");
+        //((ArrayList) ffzBadges.get("ffz-developer").get("users")).add("batedurgonnadie");
     }
 
     private void getBTTVGlobalEmotes() throws Exception {
@@ -439,7 +468,7 @@ public class Main implements IXposedHookLoadPackage {
             String name = "bttv-" + users.getJSONObject(i).getString("type");
             ((ArrayList) bttvBadges.get(name).get("users")).add(users.getJSONObject(i).getString("name"));
         }
-        // ((ArrayList) bttvBadges.get("bttv-developer").get("users")).add("batedurgonnadie");
+        //((ArrayList) bttvBadges.get("bttv-developer").get("users")).add("batedurgonnadie");
     }
 
     private JSONObject getJSON(URL url) throws Exception {

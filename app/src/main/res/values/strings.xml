@@ -28,8 +28,13 @@
     <string name="preference_bttv_badges_summary">Show badges in chat</string>
 
 
-    <string name="preference_badge_hiding">Badge Hiding</string>
+    <string name="preference_badges">Badges</string>
     <string name="preference_badge_hiding_enable">badge_hiding_enable</string>
     <string name="preference_badge_hiding_title">Badges to Hide</string>
     <string name="preference_badge_hiding_summary">List of badges separated by commas</string>
+
+    <string name="preference_bits">Bits</string>
+    <string name="preference_bits_combine_enable">bits_combine_enable</string>
+    <string name="preference_bits_combine_title">Combine Bits</string>
+    <string name="preference_bits_combine_summary">Combine and move bits to the end of messages</string>
 </resources>
