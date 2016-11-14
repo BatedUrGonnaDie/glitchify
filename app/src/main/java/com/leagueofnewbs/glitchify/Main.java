@@ -275,7 +275,8 @@ public class Main implements IXposedHookLoadPackage {
     private void injectEmotes(StringBuilder chatMsg, Hashtable customEmoteHash) {
         for (Object key : customEmoteHash.keySet()) {
             String keyString = (String) key;
-            int location = 0;
+            int location = chatMsg.toString().toLowerCase().indexOf(chatSender);
+            location = chatMsg.indexOf(" ", location);
             int keyLength = keyString.length();
             while ((location = chatMsg.indexOf(keyString, location)) != -1) {
                 if (location != 0 && chatMsg.charAt(location - 1) != ' ') { continue; }
