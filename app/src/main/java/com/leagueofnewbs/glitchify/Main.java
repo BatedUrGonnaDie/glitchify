@@ -5,7 +5,9 @@ import de.robv.android.xposed.IXposedHookLoadPackage;
 import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XSharedPreferences;
 import de.robv.android.xposed.XposedBridge;
+import de.robv.android.xposed.callbacks.XC_InitPackageResources;
 import de.robv.android.xposed.callbacks.XC_LoadPackage.LoadPackageParam;
+import de.robv.android.xposed.IXposedHookInitPackageResources;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -24,7 +26,7 @@ import java.util.TreeMap;
 
 import javax.net.ssl.HttpsURLConnection;
 
-public class Main implements IXposedHookLoadPackage {
+public class Main implements IXposedHookLoadPackage, IXposedHookInitPackageResources {
 
     private Hashtable<String, String> ffzRoomEmotes = new Hashtable<>();
     private Hashtable<String, String> ffzGlobalEmotes = new Hashtable<>();
@@ -43,6 +45,14 @@ public class Main implements IXposedHookLoadPackage {
     private HashMap<Integer, Object> twitchLinkHash = null;
     private HashMap<Integer, Object> twitchBitsHash = null;
     private String chatSender;
+
+    @Override
+    public void handleInitPackageResources(XC_InitPackageResources.InitPackageResourcesParam resparam) throws Throwable {
+        if (!resparam.packageName.equals("tv.twitch.android.app")) {
+            return;
+        }
+        resparam.res.setReplacement("tv.twitch.android.app", "color", "background", "#FF00000000");
+    }
 
     public void handleLoadPackage(final LoadPackageParam lpparam) throws Throwable {
         if (!lpparam.packageName.equals("tv.twitch.android.app")) {
@@ -275,7 +285,10 @@ public class Main implements IXposedHookLoadPackage {
     private void injectEmotes(StringBuilder chatMsg, Hashtable customEmoteHash) {
         for (Object key : customEmoteHash.keySet()) {
             String keyString = (String) key;
-            int location = chatMsg.toString().toLowerCase().indexOf(chatSender);
+            int location = 0;
+            if (chatSender != null) {
+                location = chatMsg.toString().toLowerCase().indexOf(chatSender);
+            }
             location = chatMsg.indexOf(" ", location);
             int keyLength = keyString.length();
             while ((location = chatMsg.indexOf(keyString, location)) != -1) {
@@ -365,7 +378,7 @@ public class Main implements IXposedHookLoadPackage {
         if (roomEmotes.getJSONObject("room").isNull("moderator_badge")) {
             customModBadge = null;
         } else {
-            customModBadge = "https://leagueofnewbs.com/api/glitchify/mod/" + roomEmotes.getJSONObject("room").get("id") + ".png";
+            customModBadge = "https:" + roomEmotes.getJSONObject("room").getJSONObject("mod_urls").getString("2") + "/solid";
         }
         JSONArray roomEmoteArray = roomEmotes.getJSONObject("sets").getJSONObject(Integer.toString(set)).getJSONArray("emoticons");
         for (int i = 0; i < roomEmoteArray.length(); ++i) {
