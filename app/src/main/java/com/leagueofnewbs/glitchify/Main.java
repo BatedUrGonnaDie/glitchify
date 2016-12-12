@@ -378,7 +378,12 @@ public class Main implements IXposedHookLoadPackage, IXposedHookInitPackageResou
         if (roomEmotes.getJSONObject("room").isNull("moderator_badge")) {
             customModBadge = null;
         } else {
-            customModBadge = "https:" + roomEmotes.getJSONObject("room").getJSONObject("mod_urls").getString("2") + "/solid";
+            JSONObject mod_urls = roomEmotes.getJSONObject("room").getJSONObject("mod_urls");
+            String url = mod_urls.getString("1");
+            if (mod_urls.has("2")) {
+                url = mod_urls.getString("2");
+            }
+            customModBadge = "https:" + url + "/solid";
         }
         JSONArray roomEmoteArray = roomEmotes.getJSONObject("sets").getJSONObject(Integer.toString(set)).getJSONArray("emoticons");
         for (int i = 0; i < roomEmoteArray.length(); ++i) {
