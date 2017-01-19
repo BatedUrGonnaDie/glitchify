@@ -48,4 +48,25 @@
             android:title="@string/preference_bits_combine_title" />
     </PreferenceCategory>
 
+    <PreferenceCategory android:title="@string/preference_chat_moderation">
+        <SwitchPreference
+            android:defaultValue="true"
+            android:key="@string/preference_show_deleted_messages_enable"
+            android:summary="@string/preference_show_deleted_messages_summary"
+            android:title="@string/preference_show_deleted_messages_title" />
+        <SwitchPreference
+            android:defaultValue="true"
+            android:key="@string/preference_prevent_channel_clear_enable"
+            android:summary="@string/preference_prevent_channel_clear_summary"
+            android:title="@string/preference_prevent_channel_clear_title" />
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="@string/preference_random_chat">
+        <SwitchPreference
+            android:defaultValue="true"
+            android:key="@string/preference_show_timestamps_enable"
+            android:title="@string/preference_show_timestamps_title"
+            android:summary="@string/preference_show_timestamps_summary" />
+    </PreferenceCategory>
+
 </PreferenceScreen>

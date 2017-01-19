@@ -1,5 +1,13 @@
 package com.leagueofnewbs.glitchify;
 
+import android.app.Activity;
+import android.content.Context;
+import android.text.Spannable;
+import android.text.SpannableStringBuilder;
+import android.text.Spanned;
+import android.text.style.RelativeSizeSpan;
+import android.text.style.StrikethroughSpan;
+
 import static de.robv.android.xposed.XposedHelpers.*;
 import de.robv.android.xposed.IXposedHookLoadPackage;
 import de.robv.android.xposed.XC_MethodHook;
@@ -17,16 +25,21 @@ import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Set;
 import java.util.TreeMap;
 
 import javax.net.ssl.HttpsURLConnection;
 
-public class Main implements IXposedHookLoadPackage, IXposedHookInitPackageResources {
+public class Main implements IXposedHookLoadPackage {
 
     private Hashtable<String, String> ffzRoomEmotes = new Hashtable<>();
     private Hashtable<String, String> ffzGlobalEmotes = new Hashtable<>();
@@ -45,14 +58,6 @@ public class Main implements IXposedHookLoadPackage, IXposedHookInitPackageResou
     private HashMap<Integer, Object> twitchLinkHash = null;
     private HashMap<Integer, Object> twitchBitsHash = null;
     private String chatSender;
-
-    @Override
-    public void handleInitPackageResources(XC_InitPackageResources.InitPackageResourcesParam resparam) throws Throwable {
-        if (!resparam.packageName.equals("tv.twitch.android.app")) {
-            return;
-        }
-        resparam.res.setReplacement("tv.twitch.android.app", "color", "background", "#FF00000000");
-    }
 
     public void handleLoadPackage(final LoadPackageParam lpparam) throws Throwable {
         if (!lpparam.packageName.equals("tv.twitch.android.app")) {
@@ -74,6 +79,9 @@ public class Main implements IXposedHookLoadPackage, IXposedHookInitPackageResou
                 hiddenBadges.add(((String) key).trim());
             }
         }
+        final boolean prefPreventChatClear = pref.getBoolean("prevent_channel_clear", true);
+        final boolean prefShowDeletedMessages = pref.getBoolean("show_deleted_messages", true);
+        final boolean prefShowTimeStamps = pref.getBoolean("show_timestamps", true);
 
         Thread globalThread = new Thread(new Runnable() {
             @Override
@@ -119,6 +127,11 @@ public class Main implements IXposedHookLoadPackage, IXposedHookInitPackageResou
 
         final Class<?> channelModelClass = findClass("tv.twitch.android.models.ChannelModel", lpparam.classLoader);
         final Class<?> chatMsgBuilderClass = findClass("tv.twitch.android.social.a", lpparam.classLoader);
+        final Class<?> chatUpdaterClass = findClass("tv.twitch.android.b.a.b", lpparam.classLoader);
+        final Class<?> chatWidgetClass = findClass("tv.twitch.android.social.widgets.ChatWidget", lpparam.classLoader);
+        final Class<?> messageObjectClass = findClass("tv.twitch.android.adapters.e.j", lpparam.classLoader);
+        final Class<?> messageListClass = findClass("tv.twitch.android.adapters.e.k", lpparam.classLoader);
+        final Class<?> clickableSpanClass = findClass("tv.twitch.android.social.j", lpparam.classLoader);
 
         XposedBridge.hookAllMethods(chatMsgBuilderClass, "a", new XC_MethodHook() {
             @Override
@@ -142,8 +155,11 @@ public class Main implements IXposedHookLoadPackage, IXposedHookInitPackageResou
                 twitchMentionHash = (HashMap) getObjectField(param.thisObject, "d");
                 twitchLinkHash = (HashMap) getObjectField(param.thisObject, "e");
                 twitchBitsHash = (HashMap) getObjectField(param.thisObject, "f");
-                //XposedBridge.log("LoN: " + chatMsg.toString());
+
                 if (param.args[0] instanceof Boolean) {
+                    if (prefBitsCombine) {
+                        combineBits(chatMsg);
+                    }
                     if (prefFFZEmotes) {
                         injectEmotes(chatMsg, ffzGlobalEmotes);
                         injectEmotes(chatMsg, ffzRoomEmotes);
@@ -152,12 +168,9 @@ public class Main implements IXposedHookLoadPackage, IXposedHookInitPackageResou
                         injectEmotes(chatMsg, bttvGlobalEmotes);
                         injectEmotes(chatMsg, bttvRoomEmotes);
                     }
-                    if (prefBitsCombine) {
-                        combineBits(chatMsg);
-                    }
                 } else {
                     if (prefFFZModBadge && customModBadge != null) {
-                        replaceModBadge(chatMsg);
+                        replaceModBadge();
                     }
                     if (!hiddenBadges.isEmpty()) {
                         hideBadges(chatMsg);
@@ -169,11 +182,102 @@ public class Main implements IXposedHookLoadPackage, IXposedHookInitPackageResou
                         injectBadges(chatMsg, bttvBadges);
                     }
                 }
-                //XposedBridge.log("LoN: " + chatMsg.toString());
             }
         });
 
-        findAndHookMethod("tv.twitch.android.social.widgets.ChatWidget", lpparam.classLoader, "a", channelModelClass, String.class, new XC_MethodHook() {
+        findAndHookMethod(messageListClass, "a", String.class, new XC_MethodHook() {
+            @Override
+            protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+                if (prefShowDeletedMessages) {
+                    param.setResult(null);
+                    List messageList = (List) getObjectField(param.thisObject, "b");
+                    ListIterator listIterator = messageList.listIterator();
+                    while (listIterator.hasNext()) {
+                        Object message = listIterator.next();
+                        String username = (String) getObjectField(message, "a");
+                        if (username.equals(param.args[0].toString())) {
+                            Spanned messageSpan = (Spanned) getObjectField(message, "c");
+                            Object[] spans = messageSpan.getSpans(0, messageSpan.length(), clickableSpanClass);
+                            int spanEnd = messageSpan.getSpanEnd(spans[0]);
+                            int length = 2;
+                            int i = spanEnd + length;
+                            if (i < messageSpan.length() && messageSpan.subSequence(spanEnd, i).toString().equals(": ")) {
+                                spanEnd += length;
+                            }
+                            SpannableStringBuilder ssb = new SpannableStringBuilder(messageSpan, 0, spanEnd);
+                            SpannableStringBuilder ssb2 = new SpannableStringBuilder(messageSpan, spanEnd, messageSpan.length());
+                            ssb.append(ssb2);
+                            ssb.setSpan(new StrikethroughSpan(), ssb.length() - ssb2.length(), ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                            setObjectField(message, "c", ssb);
+                        }
+                    }
+                }
+            }
+        });
+
+        findAndHookConstructor(messageObjectClass, Context.class, String.class, String.class, Spannable.class, new XC_MethodHook() {
+            @Override
+            protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+                if (prefShowTimeStamps) {
+                    String dateString = DateFormat.getTimeInstance(DateFormat.SHORT).format(new Date());
+                    dateString = dateString.substring(0, dateString.length() - 2);
+                    Spanned messageSpan = (Spanned) param.args[3];
+                    SpannableStringBuilder message = new SpannableStringBuilder(dateString);
+                    message.setSpan(new RelativeSizeSpan(0.75f), 0, dateString.length() - 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    message.append(new SpannableStringBuilder(messageSpan, 0, messageSpan.length()));
+                    param.args[3] = message;
+                }
+            }
+        });
+
+        findAndHookMethod(chatUpdaterClass, "chatChannelMessagesCleared", String.class, String.class, new XC_MethodHook() {
+            @Override
+            protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+                if (prefPreventChatClear) {
+                    param.setResult(null);
+                    Object outOb = getObjectField(param.thisObject, "h");
+                    Set fList = (Set) getObjectField(outOb, "b");
+                    for (Object f : fList) {
+                        final Object chatWidget = getObjectField(f, "a");
+                        if (chatWidgetClass.isInstance(chatWidget)) {
+                            Activity chatActivity = (Activity) callMethod(chatWidget, "getActivity");
+                            chatActivity.runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    callMethod(chatWidget, "b", new Class<?>[] {String.class, boolean.class}, "Prevented chat from being cleared by a moderator.", false);
+                                }
+                            });
+                        }
+                    }
+                }
+            }
+        });
+
+        findAndHookMethod(chatUpdaterClass, "chatChannelUserMessagesCleared", String.class, String.class, String.class, new XC_MethodHook() {
+            @Override
+            protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+                if (prefShowDeletedMessages) {
+                    final String username = (String) param.args[2];
+                    Object outOb = getObjectField(param.thisObject, "h");
+                    Set fList = (Set) getObjectField(outOb, "b");
+                    for (Object f : fList) {
+                        final Object chatWidget = getObjectField(f, "a");
+                        if (chatWidgetClass.isInstance(chatWidget)) {
+                            Activity chatActivity = (Activity) callMethod(chatWidget, "getActivity");
+                            chatActivity.runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    callMethod(chatWidget, "b", new Class<?>[] {String.class, boolean.class}, String.format("%s has been timed out.", username), false);
+                                }
+                            });
+                        }
+                    }
+
+                }
+            }
+        });
+
+        findAndHookMethod(chatWidgetClass, "a", channelModelClass, String.class, new XC_MethodHook() {
             @Override
             protected void afterHookedMethod(MethodHookParam param) throws Throwable {
                 if (param.args[1] == null) {
@@ -205,10 +309,15 @@ public class Main implements IXposedHookLoadPackage, IXposedHookInitPackageResou
         });
     }
 
-    private void replaceModBadge(StringBuilder chatMsg) {
-        String modURL = twitchGlobalBadges.get("moderator").get(0);
+    private void replaceModBadge() {
+        String modURL;
+        try {
+            modURL = twitchGlobalBadges.get("moderator").get(0);
+        } catch (Exception e) {
+            printException(e, "Error getting mod badge from table > ");
+            return;
+        }
         String finalURL = "";
-        int size = 0;
         boolean found = false;
         for (int i = 1; i <= 3; ++i) {
             finalURL = modURL + "/" + String.valueOf(i);
@@ -221,10 +330,9 @@ public class Main implements IXposedHookLoadPackage, IXposedHookInitPackageResou
             return;
         }
 
-        for (Object key : twitchBadgeHash.keySet()) {
-            String keyString = String.valueOf(key);
+        for (Integer key : twitchBadgeHash.keySet()) {
             if (finalURL.equals(twitchBadgeHash.get(key))) {
-                twitchBadgeHash.put(Integer.valueOf(keyString), customModBadge);
+                twitchBadgeHash.put(key, customModBadge);
                 break;
             }
         }
@@ -268,9 +376,9 @@ public class Main implements IXposedHookLoadPackage, IXposedHookInitPackageResou
                 }
                 if (!found) { continue; }
                 Integer badgeKey = 0;
-                for (Object tmpKey : twitchBadgeHash.keySet()) {
+                for (Integer tmpKey : twitchBadgeHash.keySet()) {
                     if (twitchBadgeHash.get(tmpKey).equals(badgeURL)) {
-                        badgeKey = (Integer) tmpKey;
+                        badgeKey = tmpKey;
                         break;
                     }
                 }
@@ -314,6 +422,7 @@ public class Main implements IXposedHookLoadPackage, IXposedHookInitPackageResou
             totalBits += bitAmount;
             int length = String.valueOf(bitAmount).length() + 2;
             chatMsg.replace(location, location + length + 1, "");
+            correctIndexes(location, length + 2);
         }
         twitchBitsHash.clear();
         setObjectField(tmpBitObj, "numBits", totalBits);
@@ -326,21 +435,15 @@ public class Main implements IXposedHookLoadPackage, IXposedHookInitPackageResou
     }
 
     private void correctIndexes(int locationStart, int locationLength) {
-        HashMap<Integer, Object>[] twitchHashes = new HashMap[5];
-        twitchHashes[0] = twitchBadgeHash;
-        twitchHashes[1] = twitchEmoteHash;
-        twitchHashes[2] = twitchLinkHash;
-        twitchHashes[3] = twitchMentionHash;
-        twitchHashes[4] = twitchBitsHash;
+        HashMap[] twitchHashes = {twitchBadgeHash, twitchEmoteHash, twitchLinkHash, twitchMentionHash, twitchBitsHash};
         HashMap<Integer, Object> tmpHash;
-        for (int i = 0; i < twitchHashes.length; ++i) {
-            tmpHash = new HashMap<>(twitchHashes[i]);
-            for (Object key : tmpHash.keySet()) {
-                String keyString = key.toString();
-                if (Integer.valueOf(keyString) > locationStart) {
+        for (HashMap hash: twitchHashes) {
+            tmpHash = new HashMap<>(hash);
+            for (Integer key : tmpHash.keySet()) {
+                if (key > locationStart) {
                     Object tmpObject = tmpHash.get(key);
-                    twitchHashes[i].remove(key);
-                    twitchHashes[i].put(Integer.valueOf(keyString) - locationLength + 1, tmpObject);
+                    hash.remove(key);
+                    hash.put(key - locationLength + 1, tmpObject);
                 }
             }
         }
@@ -371,6 +474,7 @@ public class Main implements IXposedHookLoadPackage, IXposedHookInitPackageResou
         try {
             int status = roomEmotes.getInt("status");
             if (status == 404) {
+                customModBadge = null;
                 return;
             }
         } catch (JSONException e) {}
@@ -423,7 +527,6 @@ public class Main implements IXposedHookLoadPackage, IXposedHookInitPackageResou
                 ((ArrayList) ffzBadges.get(name).get("users")).add(userList.getString(j).toLowerCase());
             }
         }
-        //((ArrayList) ffzBadges.get("ffz-developer").get("users")).add("batedurgonnadie");
     }
 
     private void getBTTVGlobalEmotes() throws Exception {
@@ -487,7 +590,6 @@ public class Main implements IXposedHookLoadPackage, IXposedHookInitPackageResou
             String name = "bttv-" + users.getJSONObject(i).getString("type");
             ((ArrayList) bttvBadges.get(name).get("users")).add(users.getJSONObject(i).getString("name"));
         }
-        //((ArrayList) bttvBadges.get("bttv-developer").get("users")).add("batedurgonnadie");
     }
 
     private JSONObject getJSON(URL url) throws Exception {
@@ -498,7 +600,8 @@ public class Main implements IXposedHookLoadPackage, IXposedHookInitPackageResou
             conn.setRequestProperty("Client-ID", "2pvhvz6iubpg0ny77pyb1qrjynupjdu");
         }
         InputStream inStream;
-        if (conn.getResponseCode() >= 400) {
+        int responseCode = conn.getResponseCode();
+        if (responseCode >= 400) {
             inStream = conn.getErrorStream();
         } else {
             inStream = conn.getInputStream();
@@ -510,7 +613,11 @@ public class Main implements IXposedHookLoadPackage, IXposedHookInitPackageResou
             jsonString.append(line);
         }
         buffReader.close();
-        return new JSONObject(jsonString.toString());
+        JSONObject json =  new JSONObject(jsonString.toString());
+        if (json.isNull("status")) {
+            json.put("status", responseCode);
+        }
+        return json;
     }
 
     private void printException(Exception e, String prefix) {

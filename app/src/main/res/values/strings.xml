@@ -37,4 +37,18 @@
     <string name="preference_bits_combine_enable">bits_combine_enable</string>
     <string name="preference_bits_combine_title">Combine Bits</string>
     <string name="preference_bits_combine_summary">Combine and move bits to the end of messages</string>
+
+    <string name="preference_chat_moderation">Chat Moderation</string>
+    <string name="preference_prevent_channel_clear_enable">prevent_channel_clear</string>
+    <string name="preference_prevent_channel_clear_title">Prevent Chat From Being Cleared</string>
+    <string name="preference_prevent_channel_clear_summary">Prevents moderators from being able to clear chat</string>
+
+    <string name="preference_show_deleted_messages_enable">show_deleted_messages_</string>
+    <string name="preference_show_deleted_messages_title">Stops Messages From Being Removed</string>
+    <string name="preference_show_deleted_messages_summary">Prevents messages from being replaced with message deleted</string>
+
+    <string name="preference_random_chat">Random Chat Options</string>
+    <string name="preference_show_timestamps_enable">show_timestamps</string>
+    <string name="preference_show_timestamps_title">Show timestamps in chat</string>
+    <string name="preference_show_timestamps_summary">Adds a timestamp of when the message was received</string>
 </resources>
