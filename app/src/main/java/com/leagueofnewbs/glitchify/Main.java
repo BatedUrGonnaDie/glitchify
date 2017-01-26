@@ -131,7 +131,7 @@ public class Main implements IXposedHookLoadPackage {
         final Class<?> chatWidgetClass = findClass("tv.twitch.android.social.widgets.ChatWidget", lpparam.classLoader);
         final Class<?> messageObjectClass = findClass("tv.twitch.android.a.e.j", lpparam.classLoader);
         final Class<?> messageListClass = findClass("tv.twitch.android.a.e.k", lpparam.classLoader);
-        final Class<?> clickableSpanClass = findClass("tv.twitch.android.social.j", lpparam.classLoader);
+        final Class<?> clickableSpanClass = findClass("tv.twitch.android.social.k", lpparam.classLoader);
 
         XposedBridge.hookAllMethods(chatMsgBuilderClass, "a", new XC_MethodHook() {
             @Override
@@ -277,7 +277,7 @@ public class Main implements IXposedHookLoadPackage {
             }
         });
 
-        findAndHookMethod(chatWidgetClass, "a", channelModelClass, String.class, new XC_MethodHook() {
+        findAndHookMethod(chatWidgetClass, "a", channelModelClass, String.class, boolean.class, new XC_MethodHook() {
             @Override
             protected void afterHookedMethod(MethodHookParam param) throws Throwable {
                 if (param.args[1] == null) {
