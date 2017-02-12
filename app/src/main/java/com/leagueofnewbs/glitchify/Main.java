@@ -13,9 +13,7 @@ import de.robv.android.xposed.IXposedHookLoadPackage;
 import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XSharedPreferences;
 import de.robv.android.xposed.XposedBridge;
-import de.robv.android.xposed.callbacks.XC_InitPackageResources;
 import de.robv.android.xposed.callbacks.XC_LoadPackage.LoadPackageParam;
-import de.robv.android.xposed.IXposedHookInitPackageResources;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -30,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
@@ -73,15 +72,14 @@ public class Main implements IXposedHookLoadPackage {
         final boolean prefBTTVEmotes = pref.getBoolean("bttv_emotes_enable", true);
         final boolean prefBTTVBadges = pref.getBoolean("bttv_badges_enable", true);
         final boolean prefBitsCombine = pref.getBoolean("bits_combine_enable", true);
-        final String prefBadgeHiding = pref.getString("badge_hiding_enable", "");
-        if (!prefBadgeHiding.equals("")) {
-            for (Object key : prefBadgeHiding.split(",")) {
-                hiddenBadges.add(((String) key).trim());
-            }
+        final Set<String> prefHiddenBadges = pref.getStringSet("badge_hiding_enable", new HashSet<String>());
+        for (String badge : prefHiddenBadges) {
+            hiddenBadges.add(badge);
         }
         final boolean prefPreventChatClear = pref.getBoolean("prevent_channel_clear", true);
         final boolean prefShowDeletedMessages = pref.getBoolean("show_deleted_messages", true);
         final boolean prefShowTimeStamps = pref.getBoolean("show_timestamps", true);
+        final int prefChatScrollbackLength = Integer.valueOf(pref.getString("chat_scrollback_length", "100"));
 
         Thread globalThread = new Thread(new Runnable() {
             @Override
@@ -129,9 +127,9 @@ public class Main implements IXposedHookLoadPackage {
         final Class<?> chatMsgBuilderClass = findClass("tv.twitch.android.social.a", lpparam.classLoader);
         final Class<?> chatUpdaterClass = findClass("tv.twitch.android.c.a.b", lpparam.classLoader);
         final Class<?> chatWidgetClass = findClass("tv.twitch.android.social.widgets.ChatWidget", lpparam.classLoader);
-        final Class<?> messageObjectClass = findClass("tv.twitch.android.a.e.j", lpparam.classLoader);
-        final Class<?> messageListClass = findClass("tv.twitch.android.a.e.k", lpparam.classLoader);
-        final Class<?> clickableSpanClass = findClass("tv.twitch.android.social.k", lpparam.classLoader);
+        final Class<?> messageObjectClass = findClass("tv.twitch.android.a.f.j", lpparam.classLoader);
+        final Class<?> messageListClass = findClass("tv.twitch.android.a.f.k", lpparam.classLoader);
+        final Class<?> clickableSpanClass = findClass("tv.twitch.android.social.j", lpparam.classLoader);
 
         XposedBridge.hookAllMethods(chatMsgBuilderClass, "a", new XC_MethodHook() {
             @Override
@@ -192,8 +190,7 @@ public class Main implements IXposedHookLoadPackage {
                     param.setResult(null);
                     List messageList = (List) getObjectField(param.thisObject, "b");
                     ListIterator listIterator = messageList.listIterator();
-                    while (listIterator.hasNext()) {
-                        Object message = listIterator.next();
+                    for (Object message : messageList) {
                         String username = (String) getObjectField(message, "a");
                         if (username.equals(param.args[0].toString())) {
                             Spanned messageSpan = (Spanned) getObjectField(message, "c");
@@ -277,7 +274,7 @@ public class Main implements IXposedHookLoadPackage {
             }
         });
 
-        findAndHookMethod(chatWidgetClass, "a", channelModelClass, String.class, boolean.class, new XC_MethodHook() {
+        findAndHookMethod(chatWidgetClass, "a", channelModelClass, String.class, new XC_MethodHook() {
             @Override
             protected void afterHookedMethod(MethodHookParam param) throws Throwable {
                 if (param.args[1] == null) {
@@ -305,6 +302,19 @@ public class Main implements IXposedHookLoadPackage {
                     }
                 });
                 roomThread.start();
+            }
+        });
+
+        XposedBridge.hookAllConstructors(messageListClass, new XC_MethodHook() {
+            @Override
+            protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+                param.args[0] = prefChatScrollbackLength;
+            }
+        });
+        findAndHookMethod(messageListClass, "c", int.class, new XC_MethodHook() {
+            @Override
+            protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+                param.args[0] = prefChatScrollbackLength;
             }
         });
     }

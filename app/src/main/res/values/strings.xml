@@ -43,7 +43,7 @@
     <string name="preference_prevent_channel_clear_title">Prevent Chat From Being Cleared</string>
     <string name="preference_prevent_channel_clear_summary">Prevents moderators from being able to clear chat</string>
 
-    <string name="preference_show_deleted_messages_enable">show_deleted_messages_</string>
+    <string name="preference_show_deleted_messages_enable">show_deleted_messages</string>
     <string name="preference_show_deleted_messages_title">Stops Messages From Being Removed</string>
     <string name="preference_show_deleted_messages_summary">Prevents messages from being replaced with message deleted</string>
 
@@ -51,4 +51,8 @@
     <string name="preference_show_timestamps_enable">show_timestamps</string>
     <string name="preference_show_timestamps_title">Show timestamps in chat</string>
     <string name="preference_show_timestamps_summary">Adds a timestamp of when the message was received</string>
+
+    <string name="preference_chat_scrollback_length_enable">chat_scrollback_length</string>
+    <string name="preference_chat_scrollback_length_title">Length of Chat History</string>
+    <string name="preference_chat_scrollback_length_summary">How far back you can scroll up chat</string>
 </resources>
