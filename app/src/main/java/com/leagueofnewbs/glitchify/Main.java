@@ -72,7 +72,7 @@ public class Main implements IXposedHookLoadPackage {
         final boolean prefBTTVEmotes = pref.getBoolean("bttv_emotes_enable", true);
         final boolean prefBTTVBadges = pref.getBoolean("bttv_badges_enable", true);
         final boolean prefBitsCombine = pref.getBoolean("bits_combine_enable", true);
-        final Set<String> prefHiddenBadges = pref.getStringSet("badge_hiding_enable", new HashSet<String>());
+        final Set<String> prefHiddenBadges = pref.getStringSet("badge_hiding_hash_enable", new HashSet<String>());
         for (String badge : prefHiddenBadges) {
             hiddenBadges.add(badge);
         }
@@ -127,8 +127,8 @@ public class Main implements IXposedHookLoadPackage {
         final Class<?> chatMsgBuilderClass = findClass("tv.twitch.android.social.a", lpparam.classLoader);
         final Class<?> chatUpdaterClass = findClass("tv.twitch.android.c.a.b", lpparam.classLoader);
         final Class<?> chatWidgetClass = findClass("tv.twitch.android.social.widgets.ChatWidget", lpparam.classLoader);
-        final Class<?> messageObjectClass = findClass("tv.twitch.android.a.f.j", lpparam.classLoader);
-        final Class<?> messageListClass = findClass("tv.twitch.android.a.f.k", lpparam.classLoader);
+        final Class<?> messageObjectClass = findClass("tv.twitch.android.adapters.e.j", lpparam.classLoader);
+        final Class<?> messageListClass = findClass("tv.twitch.android.adapters.e.k", lpparam.classLoader);
         final Class<?> clickableSpanClass = findClass("tv.twitch.android.social.j", lpparam.classLoader);
 
         XposedBridge.hookAllMethods(chatMsgBuilderClass, "a", new XC_MethodHook() {
@@ -183,57 +183,59 @@ public class Main implements IXposedHookLoadPackage {
             }
         });
 
-        findAndHookMethod(messageListClass, "a", String.class, new XC_MethodHook() {
-            @Override
-            protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
-                if (prefShowDeletedMessages) {
-                    param.setResult(null);
-                    List messageList = (List) getObjectField(param.thisObject, "b");
-                    ListIterator listIterator = messageList.listIterator();
-                    for (Object message : messageList) {
-                        String username = (String) getObjectField(message, "a");
-                        if (username.equals(param.args[0].toString())) {
-                            Spanned messageSpan = (Spanned) getObjectField(message, "c");
-                            Object[] spans = messageSpan.getSpans(0, messageSpan.length(), clickableSpanClass);
-                            int spanEnd = messageSpan.getSpanEnd(spans[0]);
-                            int length = 2;
-                            int i = spanEnd + length;
-                            if (i < messageSpan.length() && messageSpan.subSequence(spanEnd, i).toString().equals(": ")) {
-                                spanEnd += length;
-                            }
-                            SpannableStringBuilder ssb = new SpannableStringBuilder(messageSpan, 0, spanEnd);
-                            SpannableStringBuilder ssb2 = new SpannableStringBuilder(messageSpan, spanEnd, messageSpan.length());
-                            ssb.append(ssb2);
-                            ssb.setSpan(new StrikethroughSpan(), ssb.length() - ssb2.length(), ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                            setObjectField(message, "c", ssb);
-                        }
-                    }
-                }
-            }
-        });
+//        findAndHookMethod(messageListClass, "c", int.class, new XC_MethodHook() {
+//            @Override
+//            protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+//                if (prefShowDeletedMessages) {
+//                    //param.setResult(null);
+//                    XposedBridge.log("C got called");
+//                    List messageList = (List) getObjectField(param.thisObject, "b");
+//                    for (Object message : messageList) {
+//                        int userID = (int) getObjectField(message, "a");
+//                        XposedBridge.log(String.valueOf(userID));
+//                        XposedBridge.log(String.valueOf(String.valueOf(param.args[0])));
+//                        if (userID == ((int) param.args[0])) {
+//                            Spanned messageSpan = (Spanned) getObjectField(message, "d");
+//                            Object[] spans = messageSpan.getSpans(0, messageSpan.length(), clickableSpanClass);
+//                            int spanEnd = messageSpan.getSpanEnd(spans[0]);
+//                            int length = 2;
+//                            int i = spanEnd + length;
+//                            if (i < messageSpan.length() && messageSpan.subSequence(spanEnd, i).toString().equals(": ")) {
+//                                spanEnd += length;
+//                            }
+//                            SpannableStringBuilder ssb = new SpannableStringBuilder(messageSpan, 0, spanEnd);
+//                            SpannableStringBuilder ssb2 = new SpannableStringBuilder(messageSpan, spanEnd, messageSpan.length());
+//                            ssb.append(ssb2);
+//                            ssb.setSpan(new StrikethroughSpan(), ssb.length() - ssb2.length(), ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+//                            setObjectField(message, "c", ssb);
+//                        }
+//                    }
+//                }
+//            }
+//        });
 
-        findAndHookConstructor(messageObjectClass, Context.class, String.class, String.class, Spannable.class, new XC_MethodHook() {
+        findAndHookConstructor(messageObjectClass, Context.class, int.class, String.class, String.class, Spannable.class, new XC_MethodHook() {
             @Override
             protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
                 if (prefShowTimeStamps) {
                     String dateString = DateFormat.getTimeInstance(DateFormat.SHORT).format(new Date());
                     dateString = dateString.substring(0, dateString.length() - 2);
-                    Spanned messageSpan = (Spanned) param.args[3];
+                    Spanned messageSpan = (Spanned) param.args[4];
                     SpannableStringBuilder message = new SpannableStringBuilder(dateString);
                     message.setSpan(new RelativeSizeSpan(0.75f), 0, dateString.length() - 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                     message.append(new SpannableStringBuilder(messageSpan, 0, messageSpan.length()));
-                    param.args[3] = message;
+                    param.args[4] = message;
                 }
             }
         });
 
-        findAndHookMethod(chatUpdaterClass, "chatChannelMessagesCleared", String.class, String.class, new XC_MethodHook() {
+        findAndHookMethod(chatUpdaterClass, "chatChannelMessagesCleared", int.class, int.class, new XC_MethodHook() {
             @Override
             protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
                 if (prefPreventChatClear) {
                     param.setResult(null);
-                    Object outOb = getObjectField(param.thisObject, "h");
-                    Set fList = (Set) getObjectField(outOb, "b");
+                    Object outOb = getObjectField(param.thisObject, "a");
+                    Set fList = (Set) getObjectField(outOb, "e");
                     for (Object f : fList) {
                         final Object chatWidget = getObjectField(f, "a");
                         if (chatWidgetClass.isInstance(chatWidget)) {
@@ -250,29 +252,33 @@ public class Main implements IXposedHookLoadPackage {
             }
         });
 
-        findAndHookMethod(chatUpdaterClass, "chatChannelUserMessagesCleared", String.class, String.class, String.class, new XC_MethodHook() {
-            @Override
-            protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
-                if (prefShowDeletedMessages) {
-                    final String username = (String) param.args[2];
-                    Object outOb = getObjectField(param.thisObject, "h");
-                    Set fList = (Set) getObjectField(outOb, "b");
-                    for (Object f : fList) {
-                        final Object chatWidget = getObjectField(f, "a");
-                        if (chatWidgetClass.isInstance(chatWidget)) {
-                            Activity chatActivity = (Activity) callMethod(chatWidget, "getActivity");
-                            chatActivity.runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    callMethod(chatWidget, "b", new Class<?>[] {String.class, boolean.class}, String.format("%s has been timed out.", username), false);
-                                }
-                            });
-                        }
-                    }
-
-                }
-            }
-        });
+//        findAndHookMethod(chatUpdaterClass, "chatChannelUserMessagesCleared", int.class, int.class, int.class, new XC_MethodHook() {
+//            @Override
+//            protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+//                if (!prefShowDeletedMessages) {
+//
+//                    final int userId = (int) param.args[2];
+//                    final String username = "";
+//                    Object outOb = getObjectField(param.thisObject, "a");
+//                    Object test = getObjectField(outOb, "o");
+//                    XposedBridge.log(test.toString());
+//                    Set fList = (Set) getObjectField(outOb, "e");
+//                    for (Object f : fList) {
+//                        final Object chatWidget = getObjectField(f, "a");
+//                        if (chatWidgetClass.isInstance(chatWidget)) {
+//                            Activity chatActivity = (Activity) callMethod(chatWidget, "getActivity");
+//                            chatActivity.runOnUiThread(new Runnable() {
+//                                @Override
+//                                public void run() {
+//                                    callMethod(chatWidget, "b", new Class<?>[] {String.class, boolean.class}, String.format("%s has been timed out.", username), false);
+//                                }
+//                            });
+//                        }
+//                    }
+//
+//                }
+//            }
+//        });
 
         findAndHookMethod(chatWidgetClass, "a", channelModelClass, String.class, new XC_MethodHook() {
             @Override
@@ -280,7 +286,7 @@ public class Main implements IXposedHookLoadPackage {
                 if (param.args[1] == null) {
                     return;
                 }
-                Object channelModel = getObjectField(param.thisObject, "u");
+                Object channelModel = getObjectField(param.thisObject, "o");
                 final String channel = (String) getObjectField(channelModel, "e");
                 Thread roomThread = new Thread(new Runnable() {
                     @Override
@@ -311,7 +317,7 @@ public class Main implements IXposedHookLoadPackage {
                 param.args[0] = prefChatScrollbackLength;
             }
         });
-        findAndHookMethod(messageListClass, "c", int.class, new XC_MethodHook() {
+        findAndHookMethod(messageListClass, "d", int.class, new XC_MethodHook() {
             @Override
             protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
                 param.args[0] = prefChatScrollbackLength;
