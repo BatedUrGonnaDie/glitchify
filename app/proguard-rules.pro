@@ -15,3 +15,12 @@
 #-keepclassmembers class fqcn.of.javascript.interface.for.webview {
 #   public *;
 #}
+
+-keepattributes EnclosingMethod
+-keepattributes Signature
+-keepattributes Exceptions
+-keepattributes *Annotation*
+
+-keep class com.leagueofnewbs.glitchify.Main{*;}
+-keep class com.leagueofnewbs.glitchify.MainSettingsActivity{*;}
+-keep class de.robv.android.xposed.**{*;}

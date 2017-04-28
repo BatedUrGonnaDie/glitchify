@@ -32,7 +32,6 @@ import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Set;
 import java.util.TreeMap;
 
@@ -130,14 +129,16 @@ public class Main implements IXposedHookLoadPackage {
         final Class<?> messageObjectClass = findClass("tv.twitch.android.adapters.e.j", lpparam.classLoader);
         final Class<?> messageListClass = findClass("tv.twitch.android.adapters.e.k", lpparam.classLoader);
         final Class<?> clickableSpanClass = findClass("tv.twitch.android.social.j", lpparam.classLoader);
+        final Class<?> chatMessage = findClass("tv.twitch.chat.ChatMessage", lpparam.classLoader);
 
         XposedBridge.hookAllMethods(chatMsgBuilderClass, "a", new XC_MethodHook() {
             @Override
             protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
                 if (param.args.length > 3) {
-                    Object name = getObjectField(param.args[0], "userName");
-                    if (name != null) {
-                        chatSender = ((String) name).toLowerCase();
+                    Object chatMsg = param.args[0];
+                    String name;
+                    if (chatMessage.isInstance(chatMsg) && (name = ((String) getObjectField(chatMsg, "userName"))) != null) {
+                        chatSender = name.toLowerCase();
                     }
                 }
             }
@@ -148,11 +149,11 @@ public class Main implements IXposedHookLoadPackage {
                 }
 
                 StringBuilder chatMsg = (StringBuilder) param.args[2];
-                twitchBadgeHash = (HashMap) getObjectField(param.thisObject, "c");
+                twitchBadgeHash = (HashMap) getObjectField(param.thisObject, "d");
                 twitchEmoteHash = (HashMap) getObjectField(param.thisObject, "b");
-                twitchMentionHash = (HashMap) getObjectField(param.thisObject, "d");
-                twitchLinkHash = (HashMap) getObjectField(param.thisObject, "e");
-                twitchBitsHash = (HashMap) getObjectField(param.thisObject, "f");
+                twitchMentionHash = (HashMap) getObjectField(param.thisObject, "e");
+                twitchLinkHash = (HashMap) getObjectField(param.thisObject, "f");
+                twitchBitsHash = (HashMap) getObjectField(param.thisObject, "g");
 
                 if (param.args[0] instanceof Boolean) {
                     if (prefBitsCombine) {
@@ -249,71 +250,6 @@ public class Main implements IXposedHookLoadPackage {
                         }
                     }
                 }
-            }
-        });
-
-//        findAndHookMethod(chatUpdaterClass, "chatChannelUserMessagesCleared", int.class, int.class, int.class, new XC_MethodHook() {
-//            @Override
-//            protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-//                if (!prefShowDeletedMessages) {
-//
-//                    final int userId = (int) param.args[2];
-//                    final String username = "";
-//                    Object outOb = getObjectField(param.thisObject, "a");
-//                    Object test = getObjectField(outOb, "o");
-//                    XposedBridge.log(test.toString());
-//                    Set fList = (Set) getObjectField(outOb, "e");
-//                    for (Object f : fList) {
-//                        final Object chatWidget = getObjectField(f, "a");
-//                        if (chatWidgetClass.isInstance(chatWidget)) {
-//                            Activity chatActivity = (Activity) callMethod(chatWidget, "getActivity");
-//                            chatActivity.runOnUiThread(new Runnable() {
-//                                @Override
-//                                public void run() {
-//                                    callMethod(chatWidget, "b", new Class<?>[] {String.class, boolean.class}, String.format("%s has been timed out.", username), false);
-//                                }
-//                            });
-//                        }
-//                    }
-//
-//                }
-//            }
-//        });
-
-        findAndHookMethod(chatWidgetClass, "a", channelModelClass, String.class, new XC_MethodHook() {
-            @Override
-            protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-                if (param.args[1] == null) {
-                    return;
-                }
-                Object channelModel = getObjectField(param.thisObject, "o");
-                final String channel = (String) getObjectField(channelModel, "e");
-                Thread roomThread = new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            if (prefFFZEmotes) {
-                                getFFZRoomEmotes(channel);
-                            }
-                        } catch (Exception e) {
-                            printException(e, "Error fetching FFZ emotes for " + channel + " > ");
-                        }
-                        try {
-                            if (prefBTTVEmotes) {
-                                getBTTVRoomEmotes(channel);
-                            }
-                        } catch (Exception e) {
-                            printException(e, "Error fetching BTTV emotes for " + channel + " > ");
-                        }
-                    }
-                });
-                roomThread.start();
-            }
-        });
-
-        XposedBridge.hookAllConstructors(messageListClass, new XC_MethodHook() {
-            @Override
-            protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
                 param.args[0] = prefChatScrollbackLength;
             }
         });
@@ -409,14 +345,17 @@ public class Main implements IXposedHookLoadPackage {
     private void injectEmotes(StringBuilder chatMsg, Hashtable customEmoteHash) {
         for (Object key : customEmoteHash.keySet()) {
             String keyString = (String) key;
-            int location = 0;
-            if (chatSender != null) {
-                location = chatMsg.toString().toLowerCase().indexOf(chatSender);
+            int location;
+            if ((location = chatMsg.indexOf(":")) == -1 ) {
+                location = chatMsg.indexOf(" ");
             }
-            location = chatMsg.indexOf(" ", location);
+            location++;
             int keyLength = keyString.length();
             while ((location = chatMsg.indexOf(keyString, location)) != -1) {
-                if (location != 0 && chatMsg.charAt(location - 1) != ' ') { continue; }
+                if (chatMsg.charAt(location - 1) != ' ') {
+                    ++location;
+                    continue;
+                }
                 chatMsg.replace(location, location + keyLength, ".");
                 twitchEmoteHash.put(location, customEmoteHash.get(keyString).toString());
                 correctIndexes(location, keyLength);
@@ -427,27 +366,36 @@ public class Main implements IXposedHookLoadPackage {
 
     private void combineBits(StringBuilder chatMsg) {
         if (twitchBitsHash.isEmpty()) { return; }
-        int totalBits = 0;
+        Hashtable<String, Integer> bits = new Hashtable<>();
+        Hashtable<String, Object> tmpBitObjs = new Hashtable<>();
         TreeMap<Integer, Object> bitTree = new TreeMap<>(Collections.<Integer>reverseOrder());
         bitTree.putAll(twitchBitsHash);
-        Object tmpBitObj = new Object();
+        Object tmpBitObj;
         for (Object key : bitTree.keySet()) {
             Integer location = (Integer) key;
             tmpBitObj = twitchBitsHash.get(key);
             int bitAmount = (Integer) getObjectField(tmpBitObj, "numBits");
-            totalBits += bitAmount;
+            String bitType = (String) getObjectField(tmpBitObj, "prefix");
+            if (!tmpBitObjs.containsKey(bitType)) {
+                tmpBitObjs.put(bitType, tmpBitObj);
+                bits.put(bitType, 0);
+            }
+            bits.put(bitType, bitAmount + bits.get(bitType));
             int length = String.valueOf(bitAmount).length() + 2;
             chatMsg.replace(location, location + length + 1, "");
             correctIndexes(location, length + 2);
         }
         twitchBitsHash.clear();
-        setObjectField(tmpBitObj, "numBits", totalBits);
-        setObjectField(tmpBitObj, "text", "cheer" + String.valueOf(totalBits));
-        if (chatMsg.charAt(chatMsg.length() - 1) != ' ') {
-            chatMsg.append(" ");
+        for (String key : tmpBitObjs.keySet()) {
+            setObjectField(tmpBitObjs.get(key), "numBits", bits.get(key));
         }
-        twitchBitsHash.put(chatMsg.length(), tmpBitObj);
-        chatMsg.append("  ").append(totalBits);
+        for (String key : tmpBitObjs.keySet()) {
+            if (chatMsg.charAt(chatMsg.length() - 1) != ' ') {
+                chatMsg.append(" ");
+            }
+            twitchBitsHash.put(chatMsg.length(), tmpBitObjs.get(key));
+            chatMsg.append("  ").append(bits.get(key));
+        }
     }
 
     private void correctIndexes(int locationStart, int locationLength) {
