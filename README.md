@@ -1,6 +1,6 @@
 # Glitchify
 
-This module provides various tweaks to the official twitch.tv app on android.
+This module provides various tweaks to the official twitch.tv app on android using xposed.
 
 Features:
 - Show FFZ emotes directly in chat

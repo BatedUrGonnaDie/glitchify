@@ -47,6 +47,17 @@
     <string name="preference_show_deleted_messages_title">Stops Messages From Being Removed</string>
     <string name="preference_show_deleted_messages_summary">Prevents messages from being replaced with message deleted</string>
 
+    <string name="preference_random_video">Random Video Options</string>
+    <string name="preference_override_video_quality_enable">override_video_quality</string>
+    <string name="preference_override_video_quality_title">Override Saved Video Quality</string>
+    <string name="preference_override_video_quality_summary">Use value below instead of your last selected quality for new streams</string>
+
+    <string name="preference_default_video_quality_enable">default_video_quality</string>
+    <string name="preference_default_video_quality_option">auto</string>
+    <string name="preference_default_video_quality_title">Default Video Quality</string>
+    <string name="preference_default_video_quality_summary">Changes stream to this quality on initial load</string>
+
+
     <string name="preference_random_chat">Random Chat Options</string>
     <string name="preference_show_timestamps_enable">show_timestamps</string>
     <string name="preference_show_timestamps_title">Show timestamps in chat</string>
@@ -55,4 +66,8 @@
     <string name="preference_chat_scrollback_length_enable">chat_scrollback_length</string>
     <string name="preference_chat_scrollback_length_title">Length of Chat History</string>
     <string name="preference_chat_scrollback_length_summary">How far back you can scroll up chat</string>
+
+    <string name="preference_chat_divider_enable">chat_divider</string>
+    <string name="preference_chat_divider_title">Show divider between chat messages</string>
+    <string name="preference_chat_divider_summary">WARNING: Decreases chat scrollback in half</string>
 </resources>

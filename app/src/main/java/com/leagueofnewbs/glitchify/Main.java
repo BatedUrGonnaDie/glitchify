@@ -7,8 +7,6 @@ import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.style.RelativeSizeSpan;
 import android.text.style.StrikethroughSpan;
-import android.view.View;
-import android.widget.LinearLayout;
 
 import static de.robv.android.xposed.XposedHelpers.*;
 import de.robv.android.xposed.IXposedHookLoadPackage;
@@ -25,7 +23,6 @@ import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -53,12 +50,11 @@ public class Main implements IXposedHookLoadPackage {
     private static String customModBadge;
     private static String ffzAPIURL = "https://api.frankerfacez.com/v1/";
     private static String bttvAPIURL = "https://api.betterttv.net/2/";
-    private HashMap<Integer, Object> twitchBadgeHash = null;
-    private HashMap<Integer, Object> twitchEmoteHash = null;
+    private HashMap<Integer, String> twitchBadgeHash = null;
+    private HashMap<Integer, String> twitchEmoteHash = null;
     private HashMap<Integer, Object> twitchMentionHash = null;
-    private HashMap<Integer, Object> twitchLinkHash = null;
+    private HashMap<Integer, String> twitchLinkHash = null;
     private HashMap<Integer, Object> twitchBitsHash = null;
-    private Object savedChatWidget = null;
     private String chatSender;
 
     public void handleLoadPackage(final LoadPackageParam lpparam) throws Throwable {
@@ -86,6 +82,9 @@ public class Main implements IXposedHookLoadPackage {
         final boolean prefShowDeletedMessages = pref.getBoolean("show_deleted_messages", true);
         final boolean prefShowTimeStamps = pref.getBoolean("show_timestamps", true);
         final int prefChatScrollbackLength = Integer.valueOf(pref.getString("chat_scrollback_length", "100"));
+        final boolean prefChatDivider = pref.getBoolean("chat_divider", true);
+        final boolean prefOverrideVideoQuality = pref.getBoolean("override_video_quality", false);
+        final String prefDefaultVideoQuality = pref.getString("default_video_quality", "auto");
 
         // Get all global info that we can all at once
         // FFZ/BTTV global emotes, global twitch badges, and FFZ mod badge
@@ -133,13 +132,17 @@ public class Main implements IXposedHookLoadPackage {
 
         // These are all the different class definitions that are needed in the function hooking
         final Class<?> channelModelClass = findClass("tv.twitch.android.models.ChannelModel", lpparam.classLoader);
+        final Class<?> chatTokenizerClass = findClass("tv.twitch.android.social.a.b", lpparam.classLoader);
         final Class<?> chatMsgBuilderClass = findClass("tv.twitch.android.social.a", lpparam.classLoader);
-        final Class<?> chatUpdaterClass = findClass("tv.twitch.android.d.a.b", lpparam.classLoader);
-        final Class<?> chatWidgetClass = findClass("tv.twitch.android.social.widgets.ChatWidget", lpparam.classLoader);
-        final Class<?> messageObjectClass = findClass("tv.twitch.android.adapters.d.j", lpparam.classLoader);
-        final Class<?> messageListClass = findClass("tv.twitch.android.adapters.d.k", lpparam.classLoader);
-        final Class<?> clickableSpanClass = findClass("tv.twitch.android.social.j", lpparam.classLoader);
+        final Class<?> chatUpdaterClass = findClass("tv.twitch.android.c.a.b", lpparam.classLoader);
+        final Class<?> chatWidgetClass = findClass("tv.twitch.android.social.viewdelegates.ChatViewDelegate", lpparam.classLoader);
+        final Class<?> messageObjectClass = findClass("tv.twitch.android.adapters.social.i", lpparam.classLoader);
+        final Class<?> messageListClass = findClass("tv.twitch.android.adapters.social.j", lpparam.classLoader);
+        final Class<?> messageListHolderClass = findClass("tv.twitch.android.adapters.social.b", lpparam.classLoader);
+        final Class<?> clickableUsernameClass = findClass("tv.twitch.android.social.j", lpparam.classLoader);
         final Class<?> chatMessage = findClass("tv.twitch.chat.ChatMessage", lpparam.classLoader);
+        final Class<?> dividerClass = findClass("tv.twitch.android.adapters.social.k", lpparam.classLoader);
+        final Class<?> playerWidgetClass = findClass("tv.twitch.android.player.widgets.PlayerCoordinatorWidget", lpparam.classLoader);
 
         // This is the monster function that creates the messages
         // Twitch uses multiple hashes to hold links, bits, mentions, emotes, and badges
@@ -155,21 +158,26 @@ public class Main implements IXposedHookLoadPackage {
                     }
                 }
             }
-
+        });
+        XposedBridge.hookAllMethods(chatTokenizerClass, "a", new XC_MethodHook() {
             @Override
             protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-                if (param.args.length != 3) {
-                    return;
+                boolean badgesMethod = (param.args[1] instanceof Integer);
+                StringBuilder chatMsg;
+                if (badgesMethod) {
+                    chatMsg = (StringBuilder) param.args[2];
+                } else {
+                    chatMsg = (StringBuilder) param.args[1];
                 }
 
-                StringBuilder chatMsg = (StringBuilder) param.args[2];
-                twitchBadgeHash = (HashMap) getObjectField(param.thisObject, "d");
-                twitchEmoteHash = (HashMap) getObjectField(param.thisObject, "b");
-                twitchMentionHash = (HashMap) getObjectField(param.thisObject, "e");
-                twitchLinkHash = (HashMap) getObjectField(param.thisObject, "f");
-                twitchBitsHash = (HashMap) getObjectField(param.thisObject, "g");
+                Object hashesObject = param.args[3];
+                twitchBadgeHash = (HashMap) getObjectField(hashesObject, "c");
+                twitchEmoteHash = (HashMap) getObjectField(hashesObject, "a");
+                twitchMentionHash = (HashMap) getObjectField(hashesObject, "d");
+                twitchLinkHash = (HashMap) getObjectField(hashesObject, "b");
+                twitchBitsHash = (HashMap) getObjectField(hashesObject, "f");
 
-                if (param.args[0] instanceof Boolean) {
+                if (!badgesMethod) {
                     if (prefBitsCombine) {
                         combineBits(chatMsg);
                     }
@@ -198,14 +206,6 @@ public class Main implements IXposedHookLoadPackage {
             }
         });
 
-        // Save the current chat widget instance for future use
-        XposedBridge.hookAllConstructors(chatWidgetClass, new XC_MethodHook() {
-            @Override
-            protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-                savedChatWidget = param.thisObject;
-            }
-        });
-
         // This is called when a chat widget gets a channel name attached to it
         // It sets up all the channel specific stuff (bttz/ffz emotes, etc)
         findAndHookMethod(chatWidgetClass, "a", channelModelClass, String.class, new XC_MethodHook() {
@@ -214,8 +214,8 @@ public class Main implements IXposedHookLoadPackage {
                 if (param.args[1] == null) {
                     return;
                 }
-                Object channelModel = getObjectField(param.thisObject, "o");
-                final String channel = (String) getObjectField(channelModel, "mName");
+                Object channelModel = getObjectField(param.thisObject, "g");
+                final String channel = (String) getObjectField(channelModel, "name");
                 Thread roomThread = new Thread(new Runnable() {
                     @Override
                     public void run() {
@@ -239,50 +239,33 @@ public class Main implements IXposedHookLoadPackage {
             }
         });
 
-        // We have to manually call the message clear function because twitch broke it
-        findAndHookMethod(chatUpdaterClass, "chatChannelUserMessagesCleared", int.class, int.class, int.class, new XC_MethodHook() {
-            @Override
-            protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
-                param.setResult(null);
-                final Object id = param.args[2];
-                final Object messageList = getObjectField(savedChatWidget, "n");
-                synchronized (messageList) {
-                    ((Activity) callMethod(savedChatWidget, "getActivity")).runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            callMethod(getObjectField(savedChatWidget, "n"), "b", id);
-                        }
-                    });
-                }
-            }
-        });
-
         // This is what actually goes through and strikes out the messages
         // If show deleted is false this will replace with <message deleted>
-        findAndHookMethod(messageListClass, "c", int.class, new XC_MethodHook() {
+        findAndHookMethod(messageListClass, "d", int.class, new XC_MethodHook() {
             @Override
             protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
                 if (prefShowDeletedMessages) {
                     param.setResult(null);
                     List messageList = (List) getObjectField(param.thisObject, "b");
-                    synchronized (messageList) {
-                        for (Object message : messageList) {
-                            int userID = (int) getObjectField(message, "a");
-                            if (userID == ((int) param.args[0])) {
-                                Spanned messageSpan = (Spanned) getObjectField(message, "d");
-                                Object[] spans = messageSpan.getSpans(0, messageSpan.length(), clickableSpanClass);
-                                int spanEnd = messageSpan.getSpanEnd(spans[0]);
-                                int length = 2;
-                                int i = spanEnd + length;
-                                if (i < messageSpan.length() && messageSpan.subSequence(spanEnd, i).toString().equals(": ")) {
-                                    spanEnd += length;
-                                }
-                                SpannableStringBuilder ssb = new SpannableStringBuilder(messageSpan, 0, spanEnd);
-                                SpannableStringBuilder ssb2 = new SpannableStringBuilder(messageSpan, spanEnd, messageSpan.length());
-                                ssb.append(ssb2);
-                                ssb.setSpan(new StrikethroughSpan(), ssb.length() - ssb2.length(), ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                                setObjectField(message, "d", ssb);
+                    for (Object message : messageList) {
+                        if (!(messageObjectClass.isInstance(message))) {
+                            continue;
+                        }
+                        int userID = (int) getObjectField(message, "d");
+                        if (userID == ((int) param.args[0])) {
+                            Spanned messageSpan = (Spanned) getObjectField(message, "g");
+                            Object[] spans = messageSpan.getSpans(0, messageSpan.length(), clickableUsernameClass);
+                            int spanEnd = messageSpan.getSpanEnd(spans[0]);
+                            int length = 2;
+                            int i = spanEnd + length;
+                            if (i < messageSpan.length() && messageSpan.subSequence(spanEnd, i).toString().equals(": ")) {
+                                spanEnd += length;
                             }
+                            SpannableStringBuilder ssb = new SpannableStringBuilder(messageSpan, 0, spanEnd);
+                            SpannableStringBuilder ssb2 = new SpannableStringBuilder(messageSpan, spanEnd, messageSpan.length());
+                            ssb.append(ssb2);
+                            ssb.setSpan(new StrikethroughSpan(), ssb.length() - ssb2.length(), ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                            setObjectField(message, "g", ssb);
                         }
                     }
                 }
@@ -312,15 +295,15 @@ public class Main implements IXposedHookLoadPackage {
                 if (prefPreventChatClear) {
                     param.setResult(null);
                     Object outOb = getObjectField(param.thisObject, "a");
-                    Set fList = (Set) getObjectField(outOb, "e");
-                    for (Object f : fList) {
-                        final Object chatWidget = getObjectField(f, "a");
+                    Set dList = (Set) getObjectField(outOb, "d");
+                    for (Object d : dList) {
+                        final Object chatWidget = getObjectField(d, "a");
                         if (chatWidgetClass.isInstance(chatWidget)) {
-                            Activity chatActivity = (Activity) callMethod(chatWidget, "getActivity");
+                            Activity chatActivity = (Activity) callMethod(chatWidget, "g");
                             chatActivity.runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
-                                    callMethod(chatWidget, "b", new Class<?>[]{String.class, boolean.class}, "Prevented chat from being cleared by a moderator.", false);
+                                    callMethod(chatWidget, "a", new Class<?>[]{String.class, boolean.class}, "Prevented chat from being cleared by a moderator.", false);
                                 }
                             });
                         }
@@ -329,10 +312,38 @@ public class Main implements IXposedHookLoadPackage {
                 param.args[0] = prefChatScrollbackLength;
             }
         });
-        findAndHookMethod(messageListClass, "d", int.class, new XC_MethodHook() {
+        findAndHookConstructor(messageListClass, int.class, new XC_MethodHook() {
             @Override
             protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
                 param.args[0] = prefChatScrollbackLength;
+            }
+        });
+        findAndHookMethod(messageListClass, "e", int.class, new XC_MethodHook() {
+            @Override
+            protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+                param.args[0] = prefChatScrollbackLength;
+            }
+        });
+
+        // Add dividers before all new messages
+        findAndHookMethod(messageListHolderClass, "a", List.class, new XC_MethodHook() {
+            @Override
+            protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+                if (prefChatDivider) {
+                    Object divider = newInstance(dividerClass);
+                    callMethod(getObjectField(param.thisObject, "a"), "a", divider);
+                }
+            }
+        });
+
+        // Set stream quality before it starts playing
+        // Currently does not work for just "source"
+        findAndHookMethod(playerWidgetClass, "setStreamQuality", String.class, boolean.class, new XC_MethodHook() {
+            @Override
+            protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+                if ((!(boolean) param.args[1]) && prefOverrideVideoQuality) {
+                    param.args[0] = prefDefaultVideoQuality;
+                }
             }
         });
     }
