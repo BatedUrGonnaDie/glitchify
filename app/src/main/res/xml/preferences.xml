@@ -33,10 +33,8 @@
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/preference_badges">
-        <MultiSelectListPreference
-            android:defaultValue="@array/pref_badges_default"
-            android:entries="@array/pref_badges_key"
-            android:entryValues="@array/pref_badges_value"
+        <EditTextPreference
+            android:defaultValue=""
             android:key="@string/preference_badge_hiding_enable"
             android:summary="@string/preference_badge_hiding_summary"
             android:title="@string/preference_badge_hiding_title" />
