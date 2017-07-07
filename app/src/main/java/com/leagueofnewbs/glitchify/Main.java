@@ -136,12 +136,12 @@ public class Main implements IXposedHookLoadPackage {
         final Class<?> chatMsgBuilderClass = findClass("tv.twitch.android.social.a", lpparam.classLoader);
         final Class<?> chatUpdaterClass = findClass("tv.twitch.android.c.a.b", lpparam.classLoader);
         final Class<?> chatWidgetClass = findClass("tv.twitch.android.social.viewdelegates.ChatViewDelegate", lpparam.classLoader);
-        final Class<?> messageObjectClass = findClass("tv.twitch.android.adapters.social.i", lpparam.classLoader);
-        final Class<?> messageListClass = findClass("tv.twitch.android.adapters.social.j", lpparam.classLoader);
+        final Class<?> messageObjectClass = findClass("tv.twitch.android.adapters.social.MessageAdapterItem", lpparam.classLoader);
+        final Class<?> messageListClass = findClass("tv.twitch.android.adapters.social.i", lpparam.classLoader);
         final Class<?> messageListHolderClass = findClass("tv.twitch.android.adapters.social.b", lpparam.classLoader);
         final Class<?> clickableUsernameClass = findClass("tv.twitch.android.social.j", lpparam.classLoader);
         final Class<?> chatMessage = findClass("tv.twitch.chat.ChatMessage", lpparam.classLoader);
-        final Class<?> dividerClass = findClass("tv.twitch.android.adapters.social.k", lpparam.classLoader);
+        final Class<?> dividerClass = findClass("tv.twitch.android.adapters.social.j", lpparam.classLoader);
         final Class<?> playerWidgetClass = findClass("tv.twitch.android.player.widgets.PlayerCoordinatorWidget", lpparam.classLoader);
 
         // This is the monster function that creates the messages
