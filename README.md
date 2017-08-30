@@ -12,3 +12,14 @@ Features:
 - Prevent messages from being removed
 - Prevent mods from clearing chat
 - Add timestamps to messages
+- Add divider between messages
+- (Experimental) Override saved video quality
+
+## Development
+
+This project uses Android Studio for the IDE.  The example to get started will use that.
+
+1. Clone the repo `git clone https://github.com/batedurgonnadie/glitchify`.
+2. Open the project with Android Studio.
+3. Start making a patch or feature.
+4. Submit a PR with said patch or feature.
