@@ -131,7 +131,7 @@ public class Main implements IXposedHookLoadPackage {
         globalThread.start();
 
         // These are all the different class definitions that are needed in the function hooking
-        final Class<?> channelModelClass = findClass("tv.twitch.android.models.ChannelModel", lpparam.classLoader);
+        final Class<?> chatInfoClass = findClass("tv.twitch.android.models.ChannelInfo", lpparam.classLoader);
         final Class<?> chatTokenizerClass = findClass("tv.twitch.android.social.a.b", lpparam.classLoader);
         final Class<?> chatMsgBuilderClass = findClass("tv.twitch.android.social.b", lpparam.classLoader);
         final Class<?> chatUpdaterClass = findClass("tv.twitch.android.b.a.b", lpparam.classLoader);
@@ -208,31 +208,31 @@ public class Main implements IXposedHookLoadPackage {
         });
 
         // This is called when a chat widget gets a channel name attached to it
-        // It sets up all the channel specific stuff (bttz/ffz emotes, etc)
-        findAndHookMethod(chatWidgetClass, "a", channelModelClass, String.class, new XC_MethodHook() {
+        // It sets up all the channel specific stuff (bttv/ffz emotes, etc)
+        findAndHookMethod(chatWidgetClass, "a", chatInfoClass, String.class, new XC_MethodHook() {
             @Override
             protected void afterHookedMethod(MethodHookParam param) throws Throwable {
                 if (param.args[1] == null) {
                     return;
                 }
                 Object channelModel = getObjectField(param.thisObject, "g");
-                final String channel = (String) getObjectField(channelModel, "name");
+                final String channelInfo = (String) callMethod(channelModel, "getName");
                 Thread roomThread = new Thread(new Runnable() {
                     @Override
                     public void run() {
                         try {
                             if (prefFFZEmotes) {
-                                getFFZRoomEmotes(channel);
+                                getFFZRoomEmotes(channelInfo);
                             }
                         } catch (Exception e) {
-                            printException(e, "Error fetching FFZ emotes for " + channel + " > ");
+                            printException(e, "Error fetching FFZ emotes for " + channelInfo + " > ");
                         }
                         try {
                             if (prefBTTVEmotes) {
-                                getBTTVRoomEmotes(channel);
+                                getBTTVRoomEmotes(channelInfo);
                             }
                         } catch (Exception e) {
-                            printException(e, "Error fetching BTTV emotes for " + channel + " > ");
+                            printException(e, "Error fetching BTTV emotes for " + channelInfo + " > ");
                         }
                     }
                 });
