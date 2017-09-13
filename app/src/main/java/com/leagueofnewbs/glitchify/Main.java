@@ -163,6 +163,9 @@ public class Main implements IXposedHookLoadPackage {
         XposedBridge.hookAllMethods(chatTokenizerClass, "a", new XC_MethodHook() {
             @Override
             protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                if (param.args == null) {
+                    return;
+                }
                 boolean badgesMethod = (param.args[1] instanceof Integer);
                 StringBuilder chatMsg;
                 if (badgesMethod) {

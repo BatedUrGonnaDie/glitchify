@@ -63,7 +63,7 @@
 
     <PreferenceCategory android:title="@string/preference_random_video">
         <SwitchPreference
-            android:defaultValue="true"
+            android:defaultValue="false"
             android:key="@string/preference_override_video_quality_enable"
             android:title="@string/preference_override_video_quality_title"
             android:summary="@string/preference_override_video_quality_summary" />
@@ -87,7 +87,7 @@
             android:title="@string/preference_chat_scrollback_length_title"
             android:summary="@string/preference_chat_scrollback_length_summary" />
         <SwitchPreference
-            android:defaultValue="true"
+            android:defaultValue="false"
             android:key="@string/preference_chat_divider_enable"
             android:title="@string/preference_chat_divider_title"
             android:summary="@string/preference_chat_divider_summary" />
