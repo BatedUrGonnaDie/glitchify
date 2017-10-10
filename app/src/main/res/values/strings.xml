@@ -53,7 +53,7 @@
     <string name="preference_override_video_quality_summary">Use value below instead of your last selected quality for new streams</string>
 
     <string name="preference_default_video_quality_enable">default_video_quality</string>
-    <string name="preference_default_video_quality_option">auto</string>
+    <string name="preference_default_video_quality_option">Auto</string>
     <string name="preference_default_video_quality_title">Default Video Quality</string>
     <string name="preference_default_video_quality_summary">Changes stream to this quality on initial load</string>
 

@@ -66,6 +66,7 @@ public class Main implements IXposedHookLoadPackage {
         XSharedPreferences pref = new XSharedPreferences(Main.class.getPackage().getName(), "preferences");
         pref.makeWorldReadable();
         pref.reload();
+
         final boolean prefFFZEmotes = pref.getBoolean("ffz_emotes_enable", true);
         final boolean prefFFZBadges = pref.getBoolean("ffz_badges_enable", true);
         final boolean prefFFZModBadge = pref.getBoolean("ffz_mod_enable", true);
@@ -82,9 +83,9 @@ public class Main implements IXposedHookLoadPackage {
         final boolean prefShowDeletedMessages = pref.getBoolean("show_deleted_messages", true);
         final boolean prefShowTimeStamps = pref.getBoolean("show_timestamps", true);
         final int prefChatScrollbackLength = Integer.valueOf(pref.getString("chat_scrollback_length", "100"));
-        final boolean prefChatDivider = pref.getBoolean("chat_divider", true);
+        final boolean prefChatDivider = pref.getBoolean("chat_divider", false);
         final boolean prefOverrideVideoQuality = pref.getBoolean("override_video_quality", false);
-        final String prefDefaultVideoQuality = pref.getString("default_video_quality", "auto");
+        final String prefDefaultVideoQuality = pref.getString("default_video_quality", "Auto");
 
         // Get all global info that we can all at once
         // FFZ/BTTV global emotes, global twitch badges, and FFZ mod badge
@@ -135,11 +136,11 @@ public class Main implements IXposedHookLoadPackage {
         final Class<?> chatTokenizerClass = findClass("tv.twitch.android.social.a.b", lpparam.classLoader);
         final Class<?> chatMsgBuilderClass = findClass("tv.twitch.android.social.b", lpparam.classLoader);
         final Class<?> chatUpdaterClass = findClass("tv.twitch.android.b.a.b", lpparam.classLoader);
-        final Class<?> chatWidgetClass = findClass("tv.twitch.android.social.viewdelegates.ChatViewDelegate", lpparam.classLoader);
+        final Class<?> chatWidgetClass = findClass("tv.twitch.android.social.viewdelegates.a", lpparam.classLoader);
         final Class<?> messageObjectClass = findClass("tv.twitch.android.adapters.social.MessageAdapterItem", lpparam.classLoader);
         final Class<?> messageListClass = findClass("tv.twitch.android.adapters.social.i", lpparam.classLoader);
         final Class<?> messageListHolderClass = findClass("tv.twitch.android.adapters.social.b", lpparam.classLoader);
-        final Class<?> clickableUsernameClass = findClass("tv.twitch.android.social.l", lpparam.classLoader);
+        final Class<?> clickableUsernameClass = findClass("tv.twitch.android.social.m", lpparam.classLoader);
         final Class<?> chatMessage = findClass("tv.twitch.chat.ChatMessage", lpparam.classLoader);
         final Class<?> dividerClass = findClass("tv.twitch.android.adapters.social.j", lpparam.classLoader);
         final Class<?> playerWidgetClass = findClass("tv.twitch.android.player.widgets.PlayerCoordinatorWidget", lpparam.classLoader);
@@ -160,6 +161,7 @@ public class Main implements IXposedHookLoadPackage {
                 }
             }
         });
+
         XposedBridge.hookAllMethods(chatTokenizerClass, "a", new XC_MethodHook() {
             @Override
             protected void afterHookedMethod(MethodHookParam param) throws Throwable {
@@ -218,7 +220,7 @@ public class Main implements IXposedHookLoadPackage {
                 if (param.args[1] == null) {
                     return;
                 }
-                Object channelModel = getObjectField(param.thisObject, "g");
+                Object channelModel = getObjectField(param.thisObject, "b");
                 final String channelInfo = (String) callMethod(channelModel, "getName");
                 Thread roomThread = new Thread(new Runnable() {
                     @Override
