@@ -131,20 +131,20 @@ public class Main implements IXposedHookLoadPackage {
         });
         globalThread.start();
 
+
         // These are all the different class definitions that are needed in the function hooking
         final Class<?> chatInfoClass = findClass("tv.twitch.android.models.ChannelInfo", lpparam.classLoader);
         final Class<?> chatTokenizerClass = findClass("tv.twitch.android.social.a.b", lpparam.classLoader);
         final Class<?> chatMsgBuilderClass = findClass("tv.twitch.android.social.b", lpparam.classLoader);
         final Class<?> chatUpdaterClass = findClass("tv.twitch.android.b.a.b", lpparam.classLoader);
-        final Class<?> chatWidgetClass = findClass("tv.twitch.android.social.viewdelegates.a", lpparam.classLoader);
+        final Class<?> chatWidgetClass = findClass("tv.twitch.android.social.viewdelegates.ChatViewDelegate", lpparam.classLoader);
         final Class<?> messageObjectClass = findClass("tv.twitch.android.adapters.social.MessageAdapterItem", lpparam.classLoader);
         final Class<?> messageListClass = findClass("tv.twitch.android.adapters.social.i", lpparam.classLoader);
         final Class<?> messageListHolderClass = findClass("tv.twitch.android.adapters.social.b", lpparam.classLoader);
         final Class<?> clickableUsernameClass = findClass("tv.twitch.android.social.m", lpparam.classLoader);
-        final Class<?> chatMessage = findClass("tv.twitch.chat.ChatMessage", lpparam.classLoader);
+        final Class<?> chatMessage = findClass("tv.twitch.chat.ChatMessageInfo", lpparam.classLoader);
         final Class<?> dividerClass = findClass("tv.twitch.android.adapters.social.j", lpparam.classLoader);
-        final Class<?> playerWidgetClass = findClass("tv.twitch.android.player.widgets.PlayerCoordinatorWidget", lpparam.classLoader);
-
+        final Class<?> playerWidgetClass = findClass("tv.twitch.android.app.core.widgets.StreamWidget", lpparam.classLoader);
 
         // This is the monster function that creates the messages
         // Twitch uses multiple hashes to hold links, bits, mentions, emotes, and badges
@@ -214,14 +214,10 @@ public class Main implements IXposedHookLoadPackage {
 
         // This is called when a chat widget gets a channel name attached to it
         // It sets up all the channel specific stuff (bttv/ffz emotes, etc)
-        findAndHookMethod(chatWidgetClass, "a", chatInfoClass, String.class, new XC_MethodHook() {
+        findAndHookMethod(chatWidgetClass, "a", chatInfoClass, new XC_MethodHook() {
             @Override
             protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-                if (param.args[1] == null) {
-                    return;
-                }
-                Object channelModel = getObjectField(param.thisObject, "b");
-                final String channelInfo = (String) callMethod(channelModel, "getName");
+                final String channelInfo = (String) callMethod(param.args[0], "getName");
                 Thread roomThread = new Thread(new Runnable() {
                     @Override
                     public void run() {
@@ -344,12 +340,10 @@ public class Main implements IXposedHookLoadPackage {
 
         // Set stream quality before it starts playing
         // Currently does not work for just "source"
-        findAndHookMethod(playerWidgetClass, "setStreamQuality", String.class, boolean.class, new XC_MethodHook() {
+        XposedBridge.hookAllConstructors(playerWidgetClass, new XC_MethodHook() {
             @Override
-            protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
-                if ((!(boolean) param.args[1]) && prefOverrideVideoQuality) {
-                    param.args[0] = prefDefaultVideoQuality;
-                }
+            protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                setObjectField(param.thisObject, "d", prefDefaultVideoQuality);
             }
         });
     }
