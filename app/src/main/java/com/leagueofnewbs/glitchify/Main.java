@@ -137,11 +137,12 @@ public class Main implements IXposedHookLoadPackage {
         final Class<?> chatTokenizerClass = findClass("tv.twitch.android.social.a.b", lpparam.classLoader);
         final Class<?> chatMsgBuilderClass = findClass("tv.twitch.android.social.b", lpparam.classLoader);
         final Class<?> chatUpdaterClass = findClass("tv.twitch.android.b.a.b", lpparam.classLoader);
-        final Class<?> chatWidgetClass = findClass("tv.twitch.android.social.viewdelegates.ChatViewDelegate", lpparam.classLoader);
+        final Class<?> chatViewClass = findClass("tv.twitch.android.social.viewdelegates.ChatViewDelegate", lpparam.classLoader);
+        final Class<?> chatViewPresenterClass = findClass("tv.twitch.android.social.viewdelegates.a", lpparam.classLoader);
         final Class<?> messageObjectClass = findClass("tv.twitch.android.adapters.social.MessageAdapterItem", lpparam.classLoader);
         final Class<?> messageListClass = findClass("tv.twitch.android.adapters.social.i", lpparam.classLoader);
         final Class<?> messageListHolderClass = findClass("tv.twitch.android.adapters.social.b", lpparam.classLoader);
-        final Class<?> clickableUsernameClass = findClass("tv.twitch.android.social.m", lpparam.classLoader);
+        final Class<?> clickableUsernameClass = findClass("tv.twitch.android.social.n", lpparam.classLoader);
         final Class<?> chatMessage = findClass("tv.twitch.chat.ChatMessageInfo", lpparam.classLoader);
         final Class<?> dividerClass = findClass("tv.twitch.android.adapters.social.j", lpparam.classLoader);
         final Class<?> playerWidgetClass = findClass("tv.twitch.android.app.core.widgets.StreamWidget", lpparam.classLoader);
@@ -214,7 +215,7 @@ public class Main implements IXposedHookLoadPackage {
 
         // This is called when a chat widget gets a channel name attached to it
         // It sets up all the channel specific stuff (bttv/ffz emotes, etc)
-        findAndHookMethod(chatWidgetClass, "a", chatInfoClass, new XC_MethodHook() {
+        findAndHookMethod(chatViewClass, "a", chatInfoClass, new XC_MethodHook() {
             @Override
             protected void afterHookedMethod(MethodHookParam param) throws Throwable {
                 final String channelInfo = (String) callMethod(param.args[0], "getName");
@@ -299,21 +300,20 @@ public class Main implements IXposedHookLoadPackage {
                     Object outOb = getObjectField(param.thisObject, "a");
                     Set dList = (Set) getObjectField(outOb, "d");
                     for (Object d : dList) {
-                        final Object chatWidget = getObjectField(d, "a");
-                        if (chatWidgetClass.isInstance(chatWidget)) {
-                            Activity chatActivity = (Activity) callMethod(chatWidget, "g");
-                            chatActivity.runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    callMethod(chatWidget, "a", new Class<?>[]{String.class, boolean.class}, "Prevented chat from being cleared by a moderator.", false);
-                                }
-                            });
+                        final Object chatViewPresenter = getObjectField(d, "a");
+                        XposedBridge.log(chatViewPresenter.toString());
+                        if (chatViewPresenterClass.isInstance(chatViewPresenter)) {
+                            Object topClass = getObjectField(chatViewPresenter, "a");
+                            Object messageThing = getObjectField(topClass, "N");
+                            callMethod(messageThing, "a", new Class<?>[]{String.class, boolean.class}, "Prevented chat from being cleared by a moderator.", false);
                         }
                     }
                 }
                 param.args[0] = prefChatScrollbackLength;
             }
         });
+
+        // Prevent overriding of chat history length
         findAndHookConstructor(messageListClass, int.class, new XC_MethodHook() {
             @Override
             protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
