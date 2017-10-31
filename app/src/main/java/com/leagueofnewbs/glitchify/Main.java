@@ -301,10 +301,8 @@ public class Main implements IXposedHookLoadPackage {
                     Set dList = (Set) getObjectField(outOb, "d");
                     for (Object d : dList) {
                         final Object chatViewPresenter = getObjectField(d, "a");
-                        XposedBridge.log(chatViewPresenter.toString());
                         if (chatViewPresenterClass.isInstance(chatViewPresenter)) {
-                            Object topClass = getObjectField(chatViewPresenter, "a");
-                            Object messageThing = getObjectField(topClass, "N");
+                            Object messageThing = getObjectField(chatViewPresenter, "N");
                             callMethod(messageThing, "a", new Class<?>[]{String.class, boolean.class}, "Prevented chat from being cleared by a moderator.", false);
                         }
                     }
