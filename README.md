@@ -13,7 +13,6 @@ Features:
 - Prevent mods from clearing chat
 - Add timestamps to messages
 - Add divider between messages
-- (Experimental) Override saved video quality
 
 ## Development
 

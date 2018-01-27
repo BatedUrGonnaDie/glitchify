@@ -1,8 +1,7 @@
 package com.leagueofnewbs.glitchify;
 
-import android.app.Activity;
 import android.content.Context;
-import android.text.Spannable;
+import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.style.RelativeSizeSpan;
@@ -25,37 +24,27 @@ import java.io.InputStreamReader;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Hashtable;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
-import java.util.TreeMap;
 
 import javax.net.ssl.HttpsURLConnection;
 
 public class Main implements IXposedHookLoadPackage {
 
-    private Hashtable<String, String> ffzRoomEmotes = new Hashtable<>();
-    private Hashtable<String, String> ffzGlobalEmotes = new Hashtable<>();
-    private Hashtable<String, Hashtable<String, Object>> ffzBadges = new Hashtable<>();
-    private Hashtable<String, String> bttvRoomEmotes = new Hashtable<>();
-    private Hashtable<String, String> bttvGlobalEmotes = new Hashtable<>();
-    private Hashtable<String, Hashtable<String, Object>> bttvBadges = new Hashtable<>();
-    private Hashtable<String, ArrayList<String>> twitchGlobalBadges = new Hashtable<>();
+    private final Hashtable<String, String> ffzRoomEmotes = new Hashtable<>();
+    private final Hashtable<String, String> ffzGlobalEmotes = new Hashtable<>();
+    private final Hashtable<String, Hashtable<String, Object>> ffzBadges = new Hashtable<>();
+    private final Hashtable<String, String> bttvRoomEmotes = new Hashtable<>();
+    private final Hashtable<String, String> bttvGlobalEmotes = new Hashtable<>();
+    private final Hashtable<String, Hashtable<String, Object>> bttvBadges = new Hashtable<>();
     private ArrayList<String> hiddenBadges = new ArrayList<>();
     private static String customModBadge;
+    private static Object customModBadgeImage;
     private static String ffzAPIURL = "https://api.frankerfacez.com/v1/";
     private static String bttvAPIURL = "https://api.betterttv.net/2/";
-    private HashMap<Integer, String> twitchBadgeHash = null;
-    private HashMap<Integer, String> twitchEmoteHash = null;
-    private HashMap<Integer, Object> twitchMentionHash = null;
-    private HashMap<Integer, String> twitchLinkHash = null;
-    private HashMap<Integer, Object> twitchBitsHash = null;
-    private String chatSender;
 
     public void handleLoadPackage(final LoadPackageParam lpparam) throws Throwable {
         if (!lpparam.packageName.equals("tv.twitch.android.app")) {
@@ -64,7 +53,6 @@ public class Main implements IXposedHookLoadPackage {
 
         // Load all the preferences and save them all so it doesn't need to be loaded again
         XSharedPreferences pref = new XSharedPreferences(Main.class.getPackage().getName(), "preferences");
-        pref.makeWorldReadable();
         pref.reload();
 
         final boolean prefFFZEmotes = pref.getBoolean("ffz_emotes_enable", true);
@@ -83,9 +71,7 @@ public class Main implements IXposedHookLoadPackage {
         final boolean prefShowDeletedMessages = pref.getBoolean("show_deleted_messages", true);
         final boolean prefShowTimeStamps = pref.getBoolean("show_timestamps", true);
         final int prefChatScrollbackLength = Integer.valueOf(pref.getString("chat_scrollback_length", "100"));
-        final boolean prefChatDivider = pref.getBoolean("chat_divider", false);
-        final boolean prefOverrideVideoQuality = pref.getBoolean("override_video_quality", false);
-        final String prefDefaultVideoQuality = pref.getString("default_video_quality", "Auto");
+        // final boolean prefChatDivider = pref.getBoolean("chat_divider", false);
 
         // Get all global info that we can all at once
         // FFZ/BTTV global emotes, global twitch badges, and FFZ mod badge
@@ -120,13 +106,6 @@ public class Main implements IXposedHookLoadPackage {
                 } catch (Exception e) {
                     printException(e, "Error fetching global BTTV badges > ");
                 }
-                try {
-                    if (prefFFZModBadge || !hiddenBadges.isEmpty()) {
-                        getTwitchBadges();
-                    }
-                } catch (Exception e) {
-                    printException(e, "Error fetching global Twitch badges > ");
-                }
             }
         });
         globalThread.start();
@@ -134,84 +113,24 @@ public class Main implements IXposedHookLoadPackage {
 
         // These are all the different class definitions that are needed in the function hooking
         final Class<?> chatInfoClass = findClass("tv.twitch.android.models.ChannelInfo", lpparam.classLoader);
-        final Class<?> chatTokenizerClass = findClass("tv.twitch.android.social.a.b", lpparam.classLoader);
-        final Class<?> chatMsgBuilderClass = findClass("tv.twitch.android.social.b", lpparam.classLoader);
+        final Class<?> chatControllerClass = findClass("tv.twitch.android.b.a", lpparam.classLoader);
         final Class<?> chatUpdaterClass = findClass("tv.twitch.android.b.a.b", lpparam.classLoader);
         final Class<?> chatViewClass = findClass("tv.twitch.android.social.viewdelegates.ChatViewDelegate", lpparam.classLoader);
-        final Class<?> chatViewPresenterClass = findClass("tv.twitch.android.social.viewdelegates.a", lpparam.classLoader);
-        final Class<?> messageObjectClass = findClass("tv.twitch.android.adapters.social.MessageAdapterItem", lpparam.classLoader);
-        final Class<?> messageListClass = findClass("tv.twitch.android.adapters.social.i", lpparam.classLoader);
-        final Class<?> messageListHolderClass = findClass("tv.twitch.android.adapters.social.b", lpparam.classLoader);
-        final Class<?> clickableUsernameClass = findClass("tv.twitch.android.social.n", lpparam.classLoader);
-        final Class<?> chatMessage = findClass("tv.twitch.chat.ChatMessageInfo", lpparam.classLoader);
-        final Class<?> dividerClass = findClass("tv.twitch.android.adapters.social.j", lpparam.classLoader);
-        final Class<?> playerWidgetClass = findClass("tv.twitch.android.app.core.widgets.StreamWidget", lpparam.classLoader);
-
-        // This is the monster function that creates the messages
-        // Twitch uses multiple hashes to hold links, bits, mentions, emotes, and badges
-        // We save these and then use a few different functions to modify them with what we need
-        XposedBridge.hookAllMethods(chatMsgBuilderClass, "a", new XC_MethodHook() {
-            @Override
-            protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
-                if (param.args.length > 3) {
-                    Object chatMsg = param.args[0];
-                    String name;
-                    if (chatMessage.isInstance(chatMsg) && (name = ((String) getObjectField(chatMsg, "userName"))) != null) {
-                        chatSender = name.toLowerCase();
-                    }
-                }
-            }
-        });
-
-        XposedBridge.hookAllMethods(chatTokenizerClass, "a", new XC_MethodHook() {
-            @Override
-            protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-                if (param.args == null) {
-                    return;
-                }
-                boolean badgesMethod = (param.args[1] instanceof Integer);
-                StringBuilder chatMsg;
-                if (badgesMethod) {
-                    chatMsg = (StringBuilder) param.args[2];
-                } else {
-                    chatMsg = (StringBuilder) param.args[1];
-                }
-
-                Object hashesObject = param.args[3];
-                twitchBadgeHash = (HashMap) getObjectField(hashesObject, "c");
-                twitchEmoteHash = (HashMap) getObjectField(hashesObject, "a");
-                twitchMentionHash = (HashMap) getObjectField(hashesObject, "d");
-                twitchLinkHash = (HashMap) getObjectField(hashesObject, "b");
-                twitchBitsHash = (HashMap) getObjectField(hashesObject, "f");
-
-                if (!badgesMethod) {
-                    if (prefBitsCombine) {
-                        combineBits(chatMsg);
-                    }
-                    if (prefFFZEmotes) {
-                        injectEmotes(chatMsg, ffzGlobalEmotes);
-                        injectEmotes(chatMsg, ffzRoomEmotes);
-                    }
-                    if (prefBTTVEmotes) {
-                        injectEmotes(chatMsg, bttvGlobalEmotes);
-                        injectEmotes(chatMsg, bttvRoomEmotes);
-                    }
-                } else {
-                    if (prefFFZModBadge && customModBadge != null) {
-                        replaceModBadge();
-                    }
-                    if (!hiddenBadges.isEmpty()) {
-                        hideBadges(chatMsg);
-                    }
-                    if (prefFFZBadges) {
-                        injectBadges(chatMsg, ffzBadges);
-                    }
-                    if (prefBTTVBadges) {
-                        injectBadges(chatMsg, bttvBadges);
-                    }
-                }
-            }
-        });
+        final Class<?> chatViewPresenterClass = findClass("tv.twitch.android.social.viewdelegates.f", lpparam.classLoader);
+        final Class<?> messageObjectClass = findClass("tv.twitch.android.adapters.social.o", lpparam.classLoader);
+        final Class<?> messageListClass = findClass("tv.twitch.android.adapters.m", lpparam.classLoader);
+        final Class<?> clickableUsernameClass = findClass("tv.twitch.android.social.w", lpparam.classLoader);
+        final Class<?> timeoutClass = findClass("tv.twitch.android.util.h", lpparam.classLoader);
+        final Class<?> systemMessageTypeClass = findClass("tv.twitch.android.adapters.social.t", lpparam.classLoader);
+        final Class<?> newChatMessageFactoryClass = findClass("tv.twitch.android.social.q", lpparam.classLoader);
+        final Class<?> glideChatImageTargetInterfaceClass = findClass("tv.twitch.android.social.h.a", lpparam.classLoader);
+        final Class<?> usernameClickableSpanInterfaceClass = findClass("tv.twitch.android.social.w.a", lpparam.classLoader);
+        final Class<?> twitchUrlSpanInterfaceClass = findClass("tv.twitch.android.util.androidUI.TwitchURLSpan.a", lpparam.classLoader);
+        final Class<?> webViewDialogFragmentEnumClass = findClass("tv.twitch.android.app.core.WebViewDialogFragment.a", lpparam.classLoader);
+        final Class<?> chatMessageInterfaceClass = findClass("tv.twitch.android.social.e", lpparam.classLoader);
+        final Class<?> chatBadgeImageClass = findClass("tv.twitch.chat.ChatBadgeImage", lpparam.classLoader);
+        final Class<?> chatBitsTokenClass = findClass("tv.twitch.chat.ChatBitsToken", lpparam.classLoader);
+        final Class<?> somethignBitsClass = findClass("tv.twitch.android.app.bits.a", lpparam.classLoader);
 
         // This is called when a chat widget gets a channel name attached to it
         // It sets up all the channel specific stuff (bttv/ffz emotes, etc)
@@ -244,49 +163,39 @@ public class Main implements IXposedHookLoadPackage {
 
         // This is what actually goes through and strikes out the messages
         // If show deleted is false this will replace with <message deleted>
-        findAndHookMethod(messageListClass, "d", int.class, new XC_MethodHook() {
+        findAndHookMethod(timeoutClass, "a", Spanned.class, String.class, new XC_MethodHook() {
             @Override
             protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
                 if (prefShowDeletedMessages) {
-                    param.setResult(null);
-                    List messageList = (List) getObjectField(param.thisObject, "b");
-                    for (Object message : messageList) {
-                        if (!(messageObjectClass.isInstance(message))) {
-                            continue;
-                        }
-                        int userID = (int) getObjectField(message, "d");
-                        if (userID == ((int) param.args[0])) {
-                            Spanned messageSpan = (Spanned) getObjectField(message, "g");
-                            Object[] spans = messageSpan.getSpans(0, messageSpan.length(), clickableUsernameClass);
-                            int spanEnd = messageSpan.getSpanEnd(spans[0]);
-                            int length = 2;
-                            int i = spanEnd + length;
-                            if (i < messageSpan.length() && messageSpan.subSequence(spanEnd, i).toString().equals(": ")) {
-                                spanEnd += length;
-                            }
-                            SpannableStringBuilder ssb = new SpannableStringBuilder(messageSpan, 0, spanEnd);
-                            SpannableStringBuilder ssb2 = new SpannableStringBuilder(messageSpan, spanEnd, messageSpan.length());
-                            ssb.append(ssb2);
-                            ssb.setSpan(new StrikethroughSpan(), ssb.length() - ssb2.length(), ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                            setObjectField(message, "g", ssb);
-                        }
+                    Spanned messageSpan = (Spanned) param.args[0];
+                    Object[] spans = messageSpan.getSpans(0, messageSpan.length(), clickableUsernameClass);
+                    int spanEnd = messageSpan.getSpanEnd(spans[0]);
+                    int length = 2;
+                    int i = spanEnd + length;
+                    if (i < messageSpan.length() && messageSpan.subSequence(spanEnd, i).toString().equals(": ")) {
+                        spanEnd += length;
                     }
+                    SpannableStringBuilder ssb = new SpannableStringBuilder(messageSpan, 0, spanEnd);
+                    SpannableStringBuilder ssb2 = new SpannableStringBuilder(messageSpan, spanEnd, messageSpan.length());
+                    ssb.append(ssb2);
+                    ssb.setSpan(new StrikethroughSpan(), ssb.length() - ssb2.length(), ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    param.setResult(ssb);
                 }
             }
         });
 
         // Add timestamps to the beginning of every message
-        findAndHookConstructor(messageObjectClass, Context.class, int.class, String.class, String.class, Spannable.class, new XC_MethodHook() {
+        findAndHookConstructor(messageObjectClass, Context.class, int.class, String.class, String.class, int.class, CharSequence.class, List.class, systemMessageTypeClass, new XC_MethodHook() {
             @Override
             protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
                 if (prefShowTimeStamps) {
                     SimpleDateFormat formatter = new SimpleDateFormat("h:mm ", Locale.US);
                     String dateString = formatter.format(new Date());
-                    Spanned messageSpan = (Spanned) param.args[4];
+                    Spanned messageSpan = (Spanned) param.args[5];
                     SpannableStringBuilder message = new SpannableStringBuilder(dateString);
                     message.setSpan(new RelativeSizeSpan(0.75f), 0, dateString.length() - 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                     message.append(new SpannableStringBuilder(messageSpan, 0, messageSpan.length()));
-                    param.args[4] = message;
+                    param.args[5] = message;
                 }
             }
         });
@@ -302,7 +211,7 @@ public class Main implements IXposedHookLoadPackage {
                     for (Object d : dList) {
                         final Object chatViewPresenter = getObjectField(d, "a");
                         if (chatViewPresenterClass.isInstance(chatViewPresenter)) {
-                            Object messageThing = getObjectField(chatViewPresenter, "N");
+                            Object messageThing = getObjectField(chatViewPresenter, "ab");
                             callMethod(messageThing, "a", new Class<?>[]{String.class, boolean.class}, "Prevented chat from being cleared by a moderator.", false);
                         }
                     }
@@ -312,81 +221,99 @@ public class Main implements IXposedHookLoadPackage {
         });
 
         // Prevent overriding of chat history length
-        findAndHookConstructor(messageListClass, int.class, new XC_MethodHook() {
-            @Override
-            protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
-                param.args[0] = prefChatScrollbackLength;
-            }
-        });
-        findAndHookMethod(messageListClass, "e", int.class, new XC_MethodHook() {
+        findAndHookConstructor(messageListClass, int.class, boolean.class, new XC_MethodHook() {
             @Override
             protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
                 param.args[0] = prefChatScrollbackLength;
             }
         });
 
-        // Add dividers before all new messages
-        findAndHookMethod(messageListHolderClass, "a", List.class, new XC_MethodHook() {
+        // Inject all badges and emotes into the finished message
+        findAndHookMethod(newChatMessageFactoryClass, "a", chatMessageInterfaceClass, glideChatImageTargetInterfaceClass, boolean.class, boolean.class, boolean.class, int.class, int.class, usernameClickableSpanInterfaceClass, twitchUrlSpanInterfaceClass, webViewDialogFragmentEnumClass, ArrayList.class, new XC_MethodHook() {
+            @Override
+            protected void  beforeHookedMethod(MethodHookParam param) throws Throwable {
+                setAdditionalInstanceField(param.thisObject, "allowBitInsertion", false);
+            }
+
+            @Override
+            protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                SpannableStringBuilder msg = new SpannableStringBuilder((SpannableString) param.getResult());
+
+                if (prefFFZBadges) {
+                    msg = injectBadges(param, msg, ffzBadges);
+                }
+                if (prefBTTVBadges) {
+                    msg = injectBadges(param, msg, bttvBadges);
+                }
+                if (prefFFZEmotes) {
+                    msg = injectEmotes(param, msg, ffzGlobalEmotes);
+                    msg = injectEmotes(param, msg, ffzRoomEmotes);
+                }
+                if (prefBTTVEmotes) {
+                    msg = injectEmotes(param, msg, bttvGlobalEmotes);
+                    msg = injectEmotes(param, msg, bttvRoomEmotes);
+                }
+                if (prefBitsCombine) {
+                    setAdditionalInstanceField(param.thisObject, "allowBitInsertion", true);
+                    Object bit = newInstance(chatBitsTokenClass);
+                    Object chatMessageInfo = getObjectField(param.args[0], "a");
+                    int numBits = getIntField(chatMessageInfo, "numBitsSent");
+                    if (numBits > 0) {
+                        setIntField(bit, "numBits", numBits);
+                        setObjectField(bit, "prefix", "cheer");
+                        SpannableString bitString = (SpannableString) callMethod(param.thisObject, "a", bit, getObjectField(param.thisObject, "c"), param.args[1], param.args[10]);
+                        if (bitString != null) {
+                            msg.append(" ");
+                            msg.append(bitString);
+                        }
+                    }
+                    setAdditionalInstanceField(param.thisObject, "allowBitInsertion", false);
+                }
+                param.setResult(SpannableString.valueOf(msg));
+            }
+        });
+
+        findAndHookMethod(newChatMessageFactoryClass, "a", chatBitsTokenClass, somethignBitsClass, glideChatImageTargetInterfaceClass, ArrayList.class, new XC_MethodHook() {
             @Override
             protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
-                if (prefChatDivider) {
-                    Object divider = newInstance(dividerClass);
-                    callMethod(getObjectField(param.thisObject, "a"), "a", divider);
+                if (!((Boolean) getAdditionalInstanceField(param.thisObject, "allowBitInsertion"))) {
+                    param.setResult(null);
                 }
             }
         });
 
-        // Set stream quality before it starts playing
-        // Currently does not work for just "source"
-        XposedBridge.hookAllConstructors(playerWidgetClass, new XC_MethodHook() {
+        // Return null for any hidden badges, for some reason this works and I'm not going to complain because it's much easier this way
+        // If custom mod badge, return a customized ChatBadgeImage instance with our url for mod badge
+        // Whenever we leave the chat, return to using the default
+        findAndHookMethod(chatControllerClass, "a", int.class, String.class, String.class, new XC_MethodHook() {
             @Override
-            protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-                setObjectField(param.thisObject, "d", prefDefaultVideoQuality);
+            protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+                String badgeName = (String) param.args[1];
+                if (hiddenBadges.contains(badgeName)) {
+                    param.setResult(null);
+                }
+                if (prefFFZModBadge && customModBadge != null && badgeName.equals("moderator")) {
+                    if (customModBadgeImage == null || !getObjectField(customModBadgeImage, "url").equals(customModBadge)) {
+                        customModBadgeImage = newInstance(chatBadgeImageClass);
+                        setObjectField(customModBadgeImage, "url", customModBadge);
+                        setFloatField(customModBadgeImage, "scale", customModBadge.charAt(customModBadge.length() - 1));
+                    }
+                    param.setResult(customModBadgeImage);
+                }
             }
         });
     }
 
-    private synchronized void replaceModBadge() {
-        String modURL;
-        try {
-            ArrayList<String> allModURLs = twitchGlobalBadges.get("moderator");
-            if (allModURLs == null) {
-                return;
-            }
-            modURL = allModURLs.get(0);
-        } catch (Exception e) {
-            printException(e, "Error getting mod badge from table > ");
-            return;
-        }
-        String finalURL = "";
-        boolean found = false;
-        for (int i = 1; i <= 3; ++i) {
-            finalURL = modURL + "/" + String.valueOf(i);
-            if (twitchBadgeHash.containsValue(finalURL)) {
-                found = true;
-                break;
-            }
-        }
-        if (!found) {
-            return;
-        }
-
-        for (Integer key : twitchBadgeHash.keySet()) {
-            if (finalURL.equals(twitchBadgeHash.get(key))) {
-                twitchBadgeHash.put(key, customModBadge);
-                break;
-            }
-        }
-    }
-
-    private synchronized void injectBadges(StringBuilder chatMsg, Hashtable customBadges) {
-        if (chatSender == null) {
-            return;
-        }
+    private SpannableStringBuilder injectBadges(XC_MethodHook.MethodHookParam param, SpannableStringBuilder chatMsg, Hashtable customBadges) {
+        String chatSender = (String) callMethod(param.args[0], "getUserName");
+        int location = 0;
+        while (chatMsg.toString().indexOf(".", location) == location) { location += 2; }
+        if (location >= 6) { return chatMsg; }
+        int badgeCount = location / 2;
         for (Object key : customBadges.keySet()) {
-            if (twitchBadgeHash.size() > 2) {
+            if (badgeCount >= 3) {
                 // Already at 3 badges, anymore will clog up chat box
-                return;
+                return chatMsg;
             }
             String keyString = (String) key;
             if (hiddenBadges.contains(keyString)) {
@@ -395,134 +322,38 @@ public class Main implements IXposedHookLoadPackage {
             if (!((ArrayList) ((Hashtable) customBadges.get(keyString)).get("users")).contains(chatSender)) {
                 continue;
             }
-            int location = (twitchBadgeHash.size() * 2);
             String url = (String) ((Hashtable) customBadges.get(keyString)).get("image");
-            chatMsg.append(". ");
-            twitchBadgeHash.put(location, url);
+            SpannableString badgeSpan = (SpannableString) callMethod(param.thisObject, "a", url, param.args[1], null, true, null, 47);
+            chatMsg.insert(location, badgeSpan);
+            location += 2;
+            badgeCount++;
         }
+        return chatMsg;
     }
 
-    private synchronized void hideBadges(StringBuilder chatMsg) {
-        for (String key : hiddenBadges) {
-            if (twitchGlobalBadges.get(key) == null) { return; }
-            for (String url : twitchGlobalBadges.get(key)) {
-                String badgeURL = "";
-                boolean found = false;
-                for (int i = 1; i <= 3; ++i) {
-                    badgeURL = url + "/" + String.valueOf(i);
-                    if (twitchBadgeHash.containsValue(badgeURL)) {
-                        found = true;
-                        break;
-                    }
-                }
-                if (!found) { continue; }
-                Integer badgeKey = 0;
-                for (Integer tmpKey : twitchBadgeHash.keySet()) {
-                    if (twitchBadgeHash.get(tmpKey).equals(badgeURL)) {
-                        badgeKey = tmpKey;
-                        break;
-                    }
-                }
-                twitchBadgeHash.remove(badgeKey);
-                chatMsg.replace(badgeKey, badgeKey + 2, "");
-                correctIndexes(badgeKey, badgeKey + 2);
-                break;
-            }
-        }
-    }
-
-    private synchronized void injectEmotes(StringBuilder chatMsg, Hashtable customEmoteHash) {
+    private SpannableStringBuilder injectEmotes(XC_MethodHook.MethodHookParam param, SpannableStringBuilder chatMsg, Hashtable customEmoteHash) {
         for (Object key : customEmoteHash.keySet()) {
             String keyString = (String) key;
             int location;
-            if ((location = chatMsg.indexOf(":")) == -1 ) {
-                location = chatMsg.indexOf(" ");
+            if ((location = chatMsg.toString().indexOf(":")) == -1 ) {
+                location = 0;
+                while (chatMsg.toString().indexOf(".") == location) { location += 2; }
+                location = chatMsg.toString().indexOf(" ", location);
             }
             location++;
             int keyLength = keyString.length();
-            while ((location = chatMsg.indexOf(keyString, location)) != -1) {
+            while ((location = chatMsg.toString().indexOf(keyString, location)) != -1) {
                 if (chatMsg.charAt(location - 1) != ' ') {
                     ++location;
                     continue;
                 }
-                chatMsg.replace(location, location + keyLength, ".");
-                twitchEmoteHash.put(location, customEmoteHash.get(keyString).toString());
-                correctIndexes(location, keyLength);
+                String url = customEmoteHash.get(keyString).toString();
+                SpannableString emoteSpan = (SpannableString) callMethod(param.thisObject, "a", url, param.args[1], null, false, null, 63);
+                chatMsg.replace(location, location + keyLength, emoteSpan);
 
             }
         }
-    }
-
-    private synchronized void combineBits(StringBuilder chatMsg) {
-        if (twitchBitsHash.isEmpty()) { return; }
-        Hashtable<String, Integer> bits = new Hashtable<>();
-        Hashtable<String, Object> tmpBitObjs = new Hashtable<>();
-        TreeMap<Integer, Object> bitTree = new TreeMap<>(Collections.<Integer>reverseOrder());
-        bitTree.putAll(twitchBitsHash);
-        Object tmpBitObj;
-        for (Object key : bitTree.keySet()) {
-            Integer location = (Integer) key;
-            tmpBitObj = twitchBitsHash.get(key);
-            int bitAmount = (Integer) getObjectField(tmpBitObj, "numBits");
-            String bitType = (String) getObjectField(tmpBitObj, "prefix");
-            if (!tmpBitObjs.containsKey(bitType)) {
-                tmpBitObjs.put(bitType, tmpBitObj);
-                bits.put(bitType, 0);
-            }
-            bits.put(bitType, bitAmount + bits.get(bitType));
-            int length = String.valueOf(bitAmount).length() + 2;
-            chatMsg.replace(location, location + length + 1, "");
-            correctIndexes(location, length + 2);
-        }
-        twitchBitsHash.clear();
-        for (String key : tmpBitObjs.keySet()) {
-            setObjectField(tmpBitObjs.get(key), "numBits", bits.get(key));
-        }
-        for (String key : tmpBitObjs.keySet()) {
-            if (chatMsg.charAt(chatMsg.length() - 1) != ' ') {
-                chatMsg.append(" ");
-            }
-            twitchBitsHash.put(chatMsg.length(), tmpBitObjs.get(key));
-            chatMsg.append("  ").append(bits.get(key));
-        }
-    }
-
-    private synchronized void correctIndexes(int locationStart, int locationLength) {
-        HashMap[] twitchHashes = {twitchBadgeHash, twitchEmoteHash, twitchLinkHash, twitchMentionHash, twitchBitsHash};
-        HashMap<Integer, Object> tmpHash;
-        for (HashMap hash: twitchHashes) {
-            tmpHash = new HashMap<>(hash);
-            for (Integer key : tmpHash.keySet()) {
-                if (key > locationStart) {
-                    Object tmpObject = tmpHash.get(key);
-                    hash.remove(key);
-                    hash.put(key - locationLength + 1, tmpObject);
-                }
-            }
-        }
-    }
-
-    private void getTwitchBadges() throws Exception {
-        URL badgeURL = new URL("https://badges.twitch.tv/v1/badges/global/display?language=en");
-        JSONObject badges = getJSON(badgeURL);
-        if (badges.getInt("status") == 200) {
-            JSONObject sets = badges.getJSONObject("badge_sets");
-            Iterator<?> keys = sets.keys();
-            synchronized (twitchGlobalBadges) {
-                while (keys.hasNext()) {
-                    String key = (String) keys.next();
-                    JSONObject badgeObject = sets.getJSONObject(key).getJSONObject("versions");
-                    twitchGlobalBadges.put(key, new ArrayList<String>());
-                    Iterator<?> innerKeys = badgeObject.keys();
-                    while (innerKeys.hasNext()) {
-                        String innerKey = (String) innerKeys.next();
-                        String url = badgeObject.getJSONObject(innerKey).getString("image_url_1x");
-                        url = url.substring(0, url.length() - 2);
-                        twitchGlobalBadges.get(key).add(url);
-                    }
-                }
-            }
-        }
+        return chatMsg;
     }
 
     private void getFFZRoomEmotes(String channel) throws Exception {
