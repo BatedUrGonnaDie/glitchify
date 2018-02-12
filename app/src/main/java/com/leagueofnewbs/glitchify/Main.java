@@ -1,9 +1,11 @@
 package com.leagueofnewbs.glitchify;
 
 import android.content.Context;
+import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
+import android.text.style.ForegroundColorSpan;
 import android.text.style.RelativeSizeSpan;
 import android.text.style.StrikethroughSpan;
 
@@ -47,7 +49,7 @@ public class Main implements IXposedHookLoadPackage {
     private static String bttvAPIURL = "https://api.betterttv.net/2/";
 
     public void handleLoadPackage(final LoadPackageParam lpparam) throws Throwable {
-        if (!lpparam.packageName.equals("tv.twitch.android.app")) {
+        if (!lpparam.packageName.equals("tv.twitch.android.app") || !lpparam.isFirstApplication) {
             return;
         }
 
@@ -117,20 +119,20 @@ public class Main implements IXposedHookLoadPackage {
         final Class<?> chatUpdaterClass = findClass("tv.twitch.android.b.a.b", lpparam.classLoader);
         final Class<?> chatViewClass = findClass("tv.twitch.android.social.viewdelegates.ChatViewDelegate", lpparam.classLoader);
         final Class<?> chatViewPresenterClass = findClass("tv.twitch.android.social.viewdelegates.f", lpparam.classLoader);
-        final Class<?> messageObjectClass = findClass("tv.twitch.android.adapters.social.o", lpparam.classLoader);
+        final Class<?> messageObjectClass = findClass("tv.twitch.android.adapters.social.p", lpparam.classLoader);
         final Class<?> messageListClass = findClass("tv.twitch.android.adapters.m", lpparam.classLoader);
-        final Class<?> clickableUsernameClass = findClass("tv.twitch.android.social.w", lpparam.classLoader);
+        final Class<?> clickableUsernameClass = findClass("tv.twitch.android.social.i", lpparam.classLoader);
         final Class<?> timeoutClass = findClass("tv.twitch.android.util.h", lpparam.classLoader);
-        final Class<?> systemMessageTypeClass = findClass("tv.twitch.android.adapters.social.t", lpparam.classLoader);
-        final Class<?> newChatMessageFactoryClass = findClass("tv.twitch.android.social.q", lpparam.classLoader);
-        final Class<?> glideChatImageTargetInterfaceClass = findClass("tv.twitch.android.social.h.a", lpparam.classLoader);
-        final Class<?> usernameClickableSpanInterfaceClass = findClass("tv.twitch.android.social.w.a", lpparam.classLoader);
+        final Class<?> systemMessageTypeClass = findClass("tv.twitch.android.adapters.social.u", lpparam.classLoader);
+        final Class<?> newChatMessageFactoryClass = findClass("tv.twitch.android.social.r", lpparam.classLoader);
+        final Class<?> glideChatImageTargetInterfaceClass = findClass("tv.twitch.android.social.j.a", lpparam.classLoader);
+        final Class<?> usernameClickableSpanInterfaceClass = findClass("tv.twitch.android.social.i.a", lpparam.classLoader);
         final Class<?> twitchUrlSpanInterfaceClass = findClass("tv.twitch.android.util.androidUI.TwitchURLSpan.a", lpparam.classLoader);
         final Class<?> webViewDialogFragmentEnumClass = findClass("tv.twitch.android.app.core.WebViewDialogFragment.a", lpparam.classLoader);
-        final Class<?> chatMessageInterfaceClass = findClass("tv.twitch.android.social.e", lpparam.classLoader);
+        final Class<?> chatMessageInterfaceClass = findClass("tv.twitch.android.social.d", lpparam.classLoader);
         final Class<?> chatBadgeImageClass = findClass("tv.twitch.chat.ChatBadgeImage", lpparam.classLoader);
         final Class<?> chatBitsTokenClass = findClass("tv.twitch.chat.ChatBitsToken", lpparam.classLoader);
-        final Class<?> somethignBitsClass = findClass("tv.twitch.android.app.bits.a", lpparam.classLoader);
+        final Class<?> bitsActionsHelperClass = findClass("tv.twitch.android.app.bits.a", lpparam.classLoader);
 
         // This is called when a chat widget gets a channel name attached to it
         // It sets up all the channel specific stuff (bttv/ffz emotes, etc)
@@ -190,12 +192,12 @@ public class Main implements IXposedHookLoadPackage {
             protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
                 if (prefShowTimeStamps) {
                     SimpleDateFormat formatter = new SimpleDateFormat("h:mm ", Locale.US);
-                    String dateString = formatter.format(new Date());
-                    Spanned messageSpan = (Spanned) param.args[5];
+                    SpannableString dateString = SpannableString.valueOf(formatter.format(new Date()));
+                    dateString.setSpan(new RelativeSizeSpan(0.75f), 0, dateString.length() - 1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    SpannableString messageSpan = (SpannableString) param.args[5];
                     SpannableStringBuilder message = new SpannableStringBuilder(dateString);
-                    message.setSpan(new RelativeSizeSpan(0.75f), 0, dateString.length() - 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                    message.append(new SpannableStringBuilder(messageSpan, 0, messageSpan.length()));
-                    param.args[5] = message;
+                    message.append(messageSpan);
+                    param.args[5] = SpannableString.valueOf(message);
                 }
             }
         });
@@ -237,6 +239,7 @@ public class Main implements IXposedHookLoadPackage {
 
             @Override
             protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                setAdditionalInstanceField(param.thisObject, "allowBitInsertion", true);
                 SpannableStringBuilder msg = new SpannableStringBuilder((SpannableString) param.getResult());
 
                 if (prefFFZBadges) {
@@ -254,7 +257,6 @@ public class Main implements IXposedHookLoadPackage {
                     msg = injectEmotes(param, msg, bttvRoomEmotes);
                 }
                 if (prefBitsCombine) {
-                    setAdditionalInstanceField(param.thisObject, "allowBitInsertion", true);
                     Object bit = newInstance(chatBitsTokenClass);
                     Object chatMessageInfo = getObjectField(param.args[0], "a");
                     int numBits = getIntField(chatMessageInfo, "numBitsSent");
@@ -267,13 +269,12 @@ public class Main implements IXposedHookLoadPackage {
                             msg.append(bitString);
                         }
                     }
-                    setAdditionalInstanceField(param.thisObject, "allowBitInsertion", false);
                 }
                 param.setResult(SpannableString.valueOf(msg));
             }
         });
 
-        findAndHookMethod(newChatMessageFactoryClass, "a", chatBitsTokenClass, somethignBitsClass, glideChatImageTargetInterfaceClass, ArrayList.class, new XC_MethodHook() {
+        findAndHookMethod(newChatMessageFactoryClass, "a", chatBitsTokenClass, bitsActionsHelperClass, glideChatImageTargetInterfaceClass, ArrayList.class, new XC_MethodHook() {
             @Override
             protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
                 if (!((Boolean) getAdditionalInstanceField(param.thisObject, "allowBitInsertion"))) {
