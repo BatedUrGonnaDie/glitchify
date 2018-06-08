@@ -1,6 +1,7 @@
 package com.leagueofnewbs.glitchify;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
@@ -47,6 +48,8 @@ public class Main implements IXposedHookLoadPackage {
     private static Object customModBadgeImage;
     private static String ffzAPIURL = "https://api.frankerfacez.com/v1/";
     private static String bttvAPIURL = "https://api.betterttv.net/2/";
+    private ColorHelper colorHelper = ColorHelper.getInstance();
+    private boolean isDark = false;
 
     public void handleLoadPackage(final LoadPackageParam lpparam) throws Throwable {
         if (!lpparam.packageName.equals("tv.twitch.android.app") || !lpparam.isFirstApplication) {
@@ -73,7 +76,10 @@ public class Main implements IXposedHookLoadPackage {
         final boolean prefShowDeletedMessages = pref.getBoolean("show_deleted_messages", true);
         final boolean prefShowTimeStamps = pref.getBoolean("show_timestamps", true);
         final int prefChatScrollbackLength = Integer.valueOf(pref.getString("chat_scrollback_length", "100"));
-        // final boolean prefChatDivider = pref.getBoolean("chat_divider", false);
+        final boolean prefColorAdjust = pref.getBoolean("color_adjust", false);
+
+        XSharedPreferences darkPrefs = new XSharedPreferences("tv.twitch.android.app", "tv.twitch.android.app_preferences");
+        isDark = darkPrefs.getBoolean("dark_theme_enabled", false);
 
         // Get all global info that we can all at once
         // FFZ/BTTV global emotes, global twitch badges, and FFZ mod badge
@@ -122,17 +128,19 @@ public class Main implements IXposedHookLoadPackage {
         final Class<?> messageObjectClass = findClass("tv.twitch.android.adapters.social.n", lpparam.classLoader);
         final Class<?> messageListClass = findClass("tv.twitch.android.adapters.m", lpparam.classLoader);
         final Class<?> clickableUsernameClass = findClass("tv.twitch.android.social.j", lpparam.classLoader);
-        final Class<?> chatUtilClass = findClass("tv.twitch.android.util.i", lpparam.classLoader);
+        final Class<?> chatUtilClass = findClass("tv.twitch.android.util.k", lpparam.classLoader);
         final Class<?> systemMessageTypeClass = findClass("tv.twitch.android.adapters.social.r", lpparam.classLoader);
         final Class<?> newChatMessageFactoryClass = findClass("tv.twitch.android.social.c", lpparam.classLoader);
-        final Class<?> glideChatImageTargetInterfaceClass = findClass("tv.twitch.android.social.k.a", lpparam.classLoader);
-        final Class<?> usernameClickableSpanInterfaceClass = findClass("tv.twitch.android.social.j.a", lpparam.classLoader);
+        final Class<?> glideChatImageTargetInterfaceClass = findClass("tv.twitch.android.social.l.a", lpparam.classLoader);
+        final Class<?> usernameClickableSpanInterfaceClass = findClass("tv.twitch.android.social.k.a", lpparam.classLoader);
         final Class<?> twitchUrlSpanInterfaceClass = findClass("tv.twitch.android.util.androidUI.TwitchURLSpan.a", lpparam.classLoader);
         final Class<?> webViewDialogFragmentEnumClass = findClass("tv.twitch.android.app.core.WebViewDialogFragment.a", lpparam.classLoader);
-        final Class<?> chatMessageInterfaceClass = findClass("tv.twitch.android.social.e", lpparam.classLoader);
+        final Class<?> chatMessageInterfaceClass = findClass("tv.twitch.android.social.f", lpparam.classLoader);
         final Class<?> chatBadgeImageClass = findClass("tv.twitch.chat.ChatBadgeImage", lpparam.classLoader);
         final Class<?> chatBitsTokenClass = findClass("tv.twitch.chat.ChatBitsToken", lpparam.classLoader);
         final Class<?> bitsActionsHelperClass = findClass("tv.twitch.android.app.bits.a", lpparam.classLoader);
+        final Class<?> chommentModelDelegateClass = findClass("tv.twitch.android.models.chomments.ChommentModelDelegate", lpparam.classLoader);
+        final Class<?> chatMessageInfoClass = findClass("tv.twitch.chat.ChatMessageInfo", lpparam.classLoader);
 
         // This is called when a chat widget gets a channel name attached to it
         // It sets up all the channel specific stuff (bttv/ffz emotes, etc)
@@ -235,6 +243,11 @@ public class Main implements IXposedHookLoadPackage {
             @Override
             protected void  beforeHookedMethod(MethodHookParam param) throws Throwable {
                 setAdditionalInstanceField(param.thisObject, "allowBitInsertion", false);
+                if (prefColorAdjust) {
+                    Integer color = (Integer) param.args[5];
+                    Integer newColor = colorHelper.maybeBrighten(color, isDark);
+                    param.args[5] = newColor;
+                }
             }
 
             @Override
@@ -256,7 +269,7 @@ public class Main implements IXposedHookLoadPackage {
                     msg = injectEmotes(param, msg, bttvGlobalEmotes);
                     msg = injectEmotes(param, msg, bttvRoomEmotes);
                 }
-                if (prefBitsCombine) {
+                if (prefBitsCombine && !chommentModelDelegateClass.isInstance(param.args[0])) {
                     Object bit = newInstance(chatBitsTokenClass);
                     Object chatMessageInfo = getObjectField(param.args[0], "a");
                     int numBits = getIntField(chatMessageInfo, "numBitsSent");
@@ -274,6 +287,7 @@ public class Main implements IXposedHookLoadPackage {
             }
         });
 
+        // Stop bits from being put into chat by the message factory
         findAndHookMethod(newChatMessageFactoryClass, "a", chatBitsTokenClass, bitsActionsHelperClass, glideChatImageTargetInterfaceClass, ArrayList.class, new XC_MethodHook() {
             @Override
             protected void beforeHookedMethod(MethodHookParam param) throws Throwable {

@@ -75,9 +75,9 @@
             android:summary="@string/preference_chat_scrollback_length_summary" />
         <SwitchPreference
             android:defaultValue="false"
-            android:key="@string/preference_chat_divider_enable"
-            android:title="@string/preference_chat_divider_title"
-            android:summary="@string/preference_chat_divider_summary" />
+            android:key="@string/preference_color_adjust_enable"
+            android:title="@string/preference_color_adjust_title"
+            android:summary="@string/preference_color_adjust_summary" />
     </PreferenceCategory>
 
 </PreferenceScreen>

@@ -61,7 +61,7 @@
     <string name="preference_chat_scrollback_length_title">Length of Chat History</string>
     <string name="preference_chat_scrollback_length_summary">How far back you can scroll up chat</string>
 
-    <string name="preference_chat_divider_enable">chat_divider</string>
-    <string name="preference_chat_divider_title">Show divider between chat messages</string>
-    <string name="preference_chat_divider_summary">WARNING: Decreases chat scrollback in half</string>
+    <string name="preference_color_adjust_enable">color_adjust</string>
+    <string name="preference_color_adjust_title">Adjust colors to be more readable</string>
+    <string name="preference_color_adjust_summary">Affects user colors in chat</string>
 </resources>

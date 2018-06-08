@@ -12,7 +12,7 @@ Features:
 - Prevent messages from being removed
 - Prevent mods from clearing chat
 - Add timestamps to messages
-- Add divider between messages
+- Adjust username colors to be more readable
 
 ## Development
 
