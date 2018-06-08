@@ -127,7 +127,7 @@ public class Main implements IXposedHookLoadPackage {
         final Class<?> chatViewPresenterClass = findClass("tv.twitch.android.social.viewdelegates.f", lpparam.classLoader);
         final Class<?> messageObjectClass = findClass("tv.twitch.android.adapters.social.n", lpparam.classLoader);
         final Class<?> messageListClass = findClass("tv.twitch.android.adapters.m", lpparam.classLoader);
-        final Class<?> clickableUsernameClass = findClass("tv.twitch.android.social.j", lpparam.classLoader);
+        final Class<?> clickableUsernameClass = findClass("tv.twitch.android.social.k", lpparam.classLoader);
         final Class<?> chatUtilClass = findClass("tv.twitch.android.util.k", lpparam.classLoader);
         final Class<?> systemMessageTypeClass = findClass("tv.twitch.android.adapters.social.r", lpparam.classLoader);
         final Class<?> newChatMessageFactoryClass = findClass("tv.twitch.android.social.c", lpparam.classLoader);
