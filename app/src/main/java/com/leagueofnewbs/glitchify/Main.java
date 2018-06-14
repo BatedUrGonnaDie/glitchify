@@ -128,7 +128,7 @@ public class Main implements IXposedHookLoadPackage {
         final Class<?> messageObjectClass = findClass("tv.twitch.android.adapters.social.n", lpparam.classLoader);
         final Class<?> messageListClass = findClass("tv.twitch.android.adapters.m", lpparam.classLoader);
         final Class<?> clickableUsernameClass = findClass("tv.twitch.android.social.k", lpparam.classLoader);
-        final Class<?> chatUtilClass = findClass("tv.twitch.android.util.k", lpparam.classLoader);
+        final Class<?> chatUtilClass = findClass("tv.twitch.android.util.l", lpparam.classLoader);
         final Class<?> systemMessageTypeClass = findClass("tv.twitch.android.adapters.social.r", lpparam.classLoader);
         final Class<?> newChatMessageFactoryClass = findClass("tv.twitch.android.social.c", lpparam.classLoader);
         final Class<?> glideChatImageTargetInterfaceClass = findClass("tv.twitch.android.social.l.a", lpparam.classLoader);
@@ -140,7 +140,6 @@ public class Main implements IXposedHookLoadPackage {
         final Class<?> chatBitsTokenClass = findClass("tv.twitch.chat.ChatBitsToken", lpparam.classLoader);
         final Class<?> bitsActionsHelperClass = findClass("tv.twitch.android.app.bits.a", lpparam.classLoader);
         final Class<?> chommentModelDelegateClass = findClass("tv.twitch.android.models.chomments.ChommentModelDelegate", lpparam.classLoader);
-        final Class<?> chatMessageInfoClass = findClass("tv.twitch.chat.ChatMessageInfo", lpparam.classLoader);
 
         // This is called when a chat widget gets a channel name attached to it
         // It sets up all the channel specific stuff (bttv/ffz emotes, etc)
