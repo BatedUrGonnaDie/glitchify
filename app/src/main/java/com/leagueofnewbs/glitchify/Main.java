@@ -131,8 +131,8 @@ public class Main implements IXposedHookLoadPackage {
         final Class<?> chatUtilClass = findClass("tv.twitch.android.util.l", lpparam.classLoader);
         final Class<?> systemMessageTypeClass = findClass("tv.twitch.android.adapters.social.r", lpparam.classLoader);
         final Class<?> newChatMessageFactoryClass = findClass("tv.twitch.android.social.c", lpparam.classLoader);
-        final Class<?> glideChatImageTargetInterfaceClass = findClass("tv.twitch.android.social.l.a", lpparam.classLoader);
-        final Class<?> usernameClickableSpanInterfaceClass = findClass("tv.twitch.android.social.k.a", lpparam.classLoader);
+        final Class<?> glideChatImageTargetInterfaceClass = findClass("tv.twitch.android.social.m.a", lpparam.classLoader);
+        final Class<?> usernameClickableSpanInterfaceClass = findClass("tv.twitch.android.social.l.a", lpparam.classLoader);
         final Class<?> twitchUrlSpanInterfaceClass = findClass("tv.twitch.android.util.androidUI.TwitchURLSpan.a", lpparam.classLoader);
         final Class<?> webViewDialogFragmentEnumClass = findClass("tv.twitch.android.app.core.WebViewDialogFragment.a", lpparam.classLoader);
         final Class<?> chatMessageInterfaceClass = findClass("tv.twitch.android.social.f", lpparam.classLoader);
@@ -357,7 +357,7 @@ public class Main implements IXposedHookLoadPackage {
             location++;
             int keyLength = keyString.length();
             while ((location = chatMsg.toString().indexOf(keyString, location)) != -1) {
-                if (chatMsg.charAt(location - 1) != ' ') {
+                if (chatMsg.charAt(location - 1) != ' ' && chatMsg.charAt(location + keyLength) != ' ') {
                     ++location;
                     continue;
                 }
