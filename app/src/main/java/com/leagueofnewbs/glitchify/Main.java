@@ -357,10 +357,12 @@ public class Main implements IXposedHookLoadPackage {
             location++;
             int keyLength = keyString.length();
             while ((location = chatMsg.toString().indexOf(keyString, location)) != -1) {
-                if (chatMsg.charAt(location - 1) != ' ' && chatMsg.charAt(location + keyLength) != ' ') {
-                    ++location;
-                    continue;
-                }
+                try {
+                    if (chatMsg.charAt(location - 1) != ' ' || chatMsg.charAt(location + keyLength) != ' ') {
+                        ++location;
+                        continue;
+                    }
+                } catch(IndexOutOfBoundsException e) {}
                 String url = customEmoteHash.get(keyString).toString();
                 SpannableString emoteSpan = (SpannableString) callMethod(param.thisObject, "a", url, param.args[1], null, false, null, 63);
                 chatMsg.replace(location, location + keyLength, emoteSpan);
