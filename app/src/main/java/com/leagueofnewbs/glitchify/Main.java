@@ -125,14 +125,14 @@ public class Main implements IXposedHookLoadPackage {
         final Class<?> chatUpdaterClass = findClass("tv.twitch.android.b.a.b", lpparam.classLoader);
         final Class<?> chatViewClass = findClass("tv.twitch.android.social.viewdelegates.ChatViewDelegate", lpparam.classLoader);
         final Class<?> chatViewPresenterClass = findClass("tv.twitch.android.social.viewdelegates.f", lpparam.classLoader);
-        final Class<?> messageObjectClass = findClass("tv.twitch.android.adapters.social.n", lpparam.classLoader);
-        final Class<?> messageListClass = findClass("tv.twitch.android.adapters.m", lpparam.classLoader);
-        final Class<?> chatUtilClass = findClass("tv.twitch.android.util.l", lpparam.classLoader);
-        final Class<?> systemMessageTypeClass = findClass("tv.twitch.android.adapters.social.r", lpparam.classLoader);
-        final Class<?> newChatMessageFactoryClass = findClass("tv.twitch.android.social.c", lpparam.classLoader);
-        final Class<?> glideChatImageTargetInterfaceClass = findClass("tv.twitch.android.social.m.a", lpparam.classLoader);
-        final Class<?> clickableUsernameClass = findClass("tv.twitch.android.social.l", lpparam.classLoader);
-        final Class<?> usernameClickableSpanInterfaceClass = findClass("tv.twitch.android.social.l.a", lpparam.classLoader);
+        final Class<?> newMessageRecyclerItemClass = findClass("tv.twitch.android.adapters.social.i", lpparam.classLoader);
+        final Class<?> newChannelChatAdapterClass = findClass("tv.twitch.android.adapters.m", lpparam.classLoader);
+        final Class<?> chatUtilClass = findClass("tv.twitch.android.util.k", lpparam.classLoader);
+        final Class<?> systemMessageTypeClass = findClass("tv.twitch.android.adapters.social.m", lpparam.classLoader);
+        final Class<?> chatMessageFactoryClass = findClass("tv.twitch.android.social.c", lpparam.classLoader);
+        final Class<?> glideChatImageTargetInterfaceClass = findClass("tv.twitch.android.social.q.a", lpparam.classLoader);
+        final Class<?> clickableUsernameClass = findClass("tv.twitch.android.social.p", lpparam.classLoader);
+        final Class<?> usernameClickableSpanInterfaceClass = findClass("tv.twitch.android.social.p.a", lpparam.classLoader);
         final Class<?> twitchUrlSpanInterfaceClass = findClass("tv.twitch.android.util.androidUI.TwitchURLSpan.a", lpparam.classLoader);
         final Class<?> webViewDialogFragmentEnumClass = findClass("tv.twitch.android.app.core.WebViewDialogFragment.a", lpparam.classLoader);
         final Class<?> chatMessageInterfaceClass = findClass("tv.twitch.android.social.f", lpparam.classLoader);
@@ -194,7 +194,7 @@ public class Main implements IXposedHookLoadPackage {
         });
 
         // Add timestamps to the beginning of every message
-        findAndHookConstructor(messageObjectClass, Context.class, int.class, String.class, String.class, int.class, CharSequence.class, List.class, systemMessageTypeClass, new XC_MethodHook() {
+        findAndHookConstructor(newMessageRecyclerItemClass, Context.class, int.class, String.class, String.class, int.class, CharSequence.class, List.class, systemMessageTypeClass, float.class, int.class, float.class, new XC_MethodHook() {
             @Override
             protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
                 if (prefShowTimeStamps) {
@@ -230,7 +230,7 @@ public class Main implements IXposedHookLoadPackage {
         });
 
         // Prevent overriding of chat history length
-        findAndHookConstructor(messageListClass, int.class, boolean.class, new XC_MethodHook() {
+        findAndHookConstructor(newChannelChatAdapterClass, int.class, new XC_MethodHook() {
             @Override
             protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
                 param.args[0] = prefChatScrollbackLength;
@@ -238,7 +238,7 @@ public class Main implements IXposedHookLoadPackage {
         });
 
         // Inject all badges and emotes into the finished message
-        findAndHookMethod(newChatMessageFactoryClass, "a", chatMessageInterfaceClass, glideChatImageTargetInterfaceClass, boolean.class, boolean.class, boolean.class, int.class, int.class, usernameClickableSpanInterfaceClass, twitchUrlSpanInterfaceClass, webViewDialogFragmentEnumClass, ArrayList.class, String.class, boolean.class, new XC_MethodHook() {
+        findAndHookMethod(chatMessageFactoryClass, "a", chatMessageInterfaceClass, glideChatImageTargetInterfaceClass, boolean.class, boolean.class, boolean.class, int.class, int.class, usernameClickableSpanInterfaceClass, twitchUrlSpanInterfaceClass, webViewDialogFragmentEnumClass, ArrayList.class, String.class, boolean.class, new XC_MethodHook() {
             @Override
             protected void  beforeHookedMethod(MethodHookParam param) throws Throwable {
                 setAdditionalInstanceField(param.thisObject, "allowBitInsertion", false);
@@ -287,7 +287,7 @@ public class Main implements IXposedHookLoadPackage {
         });
 
         // Stop bits from being put into chat by the message factory
-        findAndHookMethod(newChatMessageFactoryClass, "a", chatBitsTokenClass, bitsActionsHelperClass, glideChatImageTargetInterfaceClass, ArrayList.class, new XC_MethodHook() {
+        findAndHookMethod(chatMessageFactoryClass, "a", chatBitsTokenClass, bitsActionsHelperClass, glideChatImageTargetInterfaceClass, ArrayList.class, new XC_MethodHook() {
             @Override
             protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
                 if (!((Boolean) getAdditionalInstanceField(param.thisObject, "allowBitInsertion"))) {
@@ -366,7 +366,6 @@ public class Main implements IXposedHookLoadPackage {
                 String url = customEmoteHash.get(keyString).toString();
                 SpannableString emoteSpan = (SpannableString) callMethod(param.thisObject, "a", url, param.args[1], null, false, null, 63);
                 chatMsg.replace(location, location + keyLength, emoteSpan);
-
             }
         }
         return chatMsg;
