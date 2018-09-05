@@ -124,9 +124,8 @@ public class Main implements IXposedHookLoadPackage {
         final Class<?> chatControllerClass = findClass("tv.twitch.android.b.a", lpparam.classLoader);
         final Class<?> chatUpdaterClass = findClass("tv.twitch.android.b.a.b", lpparam.classLoader);
         final Class<?> chatViewClass = findClass("tv.twitch.android.social.viewdelegates.ChatViewDelegate", lpparam.classLoader);
-        final Class<?> chatViewPresenterClass = findClass("tv.twitch.android.social.viewdelegates.f", lpparam.classLoader);
         final Class<?> newMessageRecyclerItemClass = findClass("tv.twitch.android.adapters.social.i", lpparam.classLoader);
-        final Class<?> newChannelChatAdapterClass = findClass("tv.twitch.android.adapters.m", lpparam.classLoader);
+        final Class<?> newChannelChatAdapterClass = findClass("tv.twitch.android.adapters.l", lpparam.classLoader);
         final Class<?> chatUtilClass = findClass("tv.twitch.android.util.k", lpparam.classLoader);
         final Class<?> systemMessageTypeClass = findClass("tv.twitch.android.adapters.social.m", lpparam.classLoader);
         final Class<?> chatMessageFactoryClass = findClass("tv.twitch.android.social.c", lpparam.classLoader);
@@ -215,15 +214,6 @@ public class Main implements IXposedHookLoadPackage {
             protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
                 if (prefPreventChatClear) {
                     param.setResult(null);
-                    Object outOb = getObjectField(param.thisObject, "a");
-                    Set dList = (Set) getObjectField(outOb, "d");
-                    for (Object d : dList) {
-                        final Object chatViewPresenter = getObjectField(d, "a");
-                        if (chatViewPresenterClass.isInstance(chatViewPresenter)) {
-                            Object messageThing = getObjectField(chatViewPresenter, "ab");
-                            callMethod(messageThing, "a", new Class<?>[]{String.class, boolean.class}, "Prevented chat from being cleared by a moderator.", false);
-                        }
-                    }
                 }
                 param.args[0] = prefChatScrollbackLength;
             }
