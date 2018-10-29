@@ -123,21 +123,21 @@ public class Main implements IXposedHookLoadPackage {
         final Class<?> chatInfoClass = findClass("tv.twitch.android.models.ChannelInfo", lpparam.classLoader);
         final Class<?> chatControllerClass = findClass("tv.twitch.android.b.a", lpparam.classLoader);
         final Class<?> chatUpdaterClass = findClass("tv.twitch.android.b.a.b", lpparam.classLoader);
-        final Class<?> chatViewClass = findClass("tv.twitch.android.social.viewdelegates.ChatViewDelegate", lpparam.classLoader);
-        final Class<?> newMessageRecyclerItemClass = findClass("tv.twitch.android.adapters.social.i", lpparam.classLoader);
-        final Class<?> newChannelChatAdapterClass = findClass("tv.twitch.android.adapters.o", lpparam.classLoader);
+        final Class<?> chatViewClass = findClass("tv.twitch.android.social.a.h", lpparam.classLoader);
+        final Class<?> newMessageRecyclerItemClass = findClass("tv.twitch.android.adapters.c.i", lpparam.classLoader);
+        final Class<?> newChannelChatAdapterClass = findClass("tv.twitch.android.adapters.t", lpparam.classLoader);
         final Class<?> chatUtilClass = findClass("tv.twitch.android.util.k", lpparam.classLoader);
-        final Class<?> systemMessageTypeClass = findClass("tv.twitch.android.adapters.social.m", lpparam.classLoader);
+        final Class<?> systemMessageTypeClass = findClass("tv.twitch.android.adapters.c.n", lpparam.classLoader);
         final Class<?> chatMessageFactoryClass = findClass("tv.twitch.android.social.c", lpparam.classLoader);
-        final Class<?> glideChatImageTargetInterfaceClass = findClass("tv.twitch.android.social.q.a", lpparam.classLoader);
-        final Class<?> clickableUsernameClass = findClass("tv.twitch.android.social.p", lpparam.classLoader);
-        final Class<?> usernameClickableSpanInterfaceClass = findClass("tv.twitch.android.social.p.a", lpparam.classLoader);
+        final Class<?> glideChatImageTargetInterfaceClass = findClass("tv.twitch.android.social.o.a", lpparam.classLoader);
+        final Class<?> clickableUsernameClass = findClass("tv.twitch.android.social.m", lpparam.classLoader);
+        final Class<?> usernameClickableSpanInterfaceClass = findClass("tv.twitch.android.social.m.a", lpparam.classLoader);
         final Class<?> twitchUrlSpanInterfaceClass = findClass("tv.twitch.android.util.androidUI.TwitchURLSpan.a", lpparam.classLoader);
         final Class<?> webViewDialogFragmentEnumClass = findClass("tv.twitch.android.app.core.WebViewDialogFragment.a", lpparam.classLoader);
         final Class<?> chatMessageInterfaceClass = findClass("tv.twitch.android.social.f", lpparam.classLoader);
         final Class<?> chatBadgeImageClass = findClass("tv.twitch.chat.ChatBadgeImage", lpparam.classLoader);
         final Class<?> chatBitsTokenClass = findClass("tv.twitch.chat.ChatBitsToken", lpparam.classLoader);
-        final Class<?> bitsActionsHelperClass = findClass("tv.twitch.android.app.bits.a", lpparam.classLoader);
+        final Class<?> bitsActionsHelperClass = findClass("tv.twitch.android.app.bits.s", lpparam.classLoader);
         final Class<?> chommentModelDelegateClass = findClass("tv.twitch.android.models.chomments.ChommentModelDelegate", lpparam.classLoader);
 
         // This is called when a chat widget gets a channel name attached to it
