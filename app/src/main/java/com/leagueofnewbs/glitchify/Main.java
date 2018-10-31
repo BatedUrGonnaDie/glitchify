@@ -265,7 +265,7 @@ public class Main implements IXposedHookLoadPackage {
                     if (numBits > 0) {
                         setIntField(bit, "numBits", numBits);
                         setObjectField(bit, "prefix", "cheer");
-                        SpannableString bitString = (SpannableString) callMethod(param.thisObject, "a", bit, getObjectField(param.thisObject, "c"), param.args[1], param.args[10]);
+                        SpannableString bitString = (SpannableString) callMethod(param.thisObject, "a", bit, getObjectField(param.thisObject, "d"), param.args[1], param.args[10]);
                         if (bitString != null) {
                             msg.append(" ");
                             msg.append(bitString);
