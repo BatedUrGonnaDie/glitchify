@@ -129,15 +129,15 @@ public class Main implements IXposedHookLoadPackage {
         final Class<?> chatUtilClass = findClass("tv.twitch.android.util.k", lpparam.classLoader);
         final Class<?> systemMessageTypeClass = findClass("tv.twitch.android.adapters.c.n", lpparam.classLoader);
         final Class<?> chatMessageFactoryClass = findClass("tv.twitch.android.social.c", lpparam.classLoader);
-        final Class<?> glideChatImageTargetInterfaceClass = findClass("tv.twitch.android.social.o.a", lpparam.classLoader);
-        final Class<?> clickableUsernameClass = findClass("tv.twitch.android.social.m", lpparam.classLoader);
-        final Class<?> usernameClickableSpanInterfaceClass = findClass("tv.twitch.android.social.m.a", lpparam.classLoader);
+        final Class<?> glideChatImageTargetInterfaceClass = findClass("tv.twitch.android.social.m.a", lpparam.classLoader);
+        final Class<?> clickableUsernameClass = findClass("tv.twitch.android.social.k", lpparam.classLoader);
+        final Class<?> usernameClickableSpanInterfaceClass = findClass("tv.twitch.android.social.k.a", lpparam.classLoader);
         final Class<?> twitchUrlSpanInterfaceClass = findClass("tv.twitch.android.util.androidUI.TwitchURLSpan.a", lpparam.classLoader);
         final Class<?> webViewDialogFragmentEnumClass = findClass("tv.twitch.android.app.core.WebViewDialogFragment.a", lpparam.classLoader);
         final Class<?> chatMessageInterfaceClass = findClass("tv.twitch.android.social.f", lpparam.classLoader);
         final Class<?> chatBadgeImageClass = findClass("tv.twitch.chat.ChatBadgeImage", lpparam.classLoader);
         final Class<?> chatBitsTokenClass = findClass("tv.twitch.chat.ChatBitsToken", lpparam.classLoader);
-        final Class<?> bitsActionsHelperClass = findClass("tv.twitch.android.app.bits.s", lpparam.classLoader);
+        final Class<?> cheermotesHelperClass = findClass("tv.twitch.android.app.bits.w", lpparam.classLoader);
         final Class<?> chommentModelDelegateClass = findClass("tv.twitch.android.models.chomments.ChommentModelDelegate", lpparam.classLoader);
 
         // This is called when a chat widget gets a channel name attached to it
@@ -277,7 +277,7 @@ public class Main implements IXposedHookLoadPackage {
         });
 
         // Stop bits from being put into chat by the message factory
-        findAndHookMethod(chatMessageFactoryClass, "a", chatBitsTokenClass, bitsActionsHelperClass, glideChatImageTargetInterfaceClass, ArrayList.class, new XC_MethodHook() {
+        findAndHookMethod(chatMessageFactoryClass, "a", chatBitsTokenClass, cheermotesHelperClass, glideChatImageTargetInterfaceClass, ArrayList.class, new XC_MethodHook() {
             @Override
             protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
                 if (!((Boolean) getAdditionalInstanceField(param.thisObject, "allowBitInsertion"))) {
