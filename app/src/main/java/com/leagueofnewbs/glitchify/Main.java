@@ -123,26 +123,26 @@ public class Main implements IXposedHookLoadPackage {
         final Class<?> chatInfoClass = findClass("tv.twitch.android.models.ChannelInfo", lpparam.classLoader);
         final Class<?> chatControllerClass = findClass("tv.twitch.android.b.a", lpparam.classLoader);
         final Class<?> chatUpdaterClass = findClass("tv.twitch.android.b.a.b", lpparam.classLoader);
-        final Class<?> chatViewClass = findClass("tv.twitch.android.social.a.h", lpparam.classLoader);
-        final Class<?> newMessageRecyclerItemClass = findClass("tv.twitch.android.adapters.c.i", lpparam.classLoader);
-        final Class<?> newChannelChatAdapterClass = findClass("tv.twitch.android.adapters.t", lpparam.classLoader);
+        final Class<?> chatViewDelegateClass = findClass("tv.twitch.android.social.d.i", lpparam.classLoader);
+        final Class<?> newMessageRecyclerItemClass = findClass("tv.twitch.android.adapters.c.j", lpparam.classLoader);
+        final Class<?> newChannelChatAdapterClass = findClass("tv.twitch.android.adapters.r", lpparam.classLoader);
         final Class<?> chatUtilClass = findClass("tv.twitch.android.util.k", lpparam.classLoader);
-        final Class<?> systemMessageTypeClass = findClass("tv.twitch.android.adapters.c.n", lpparam.classLoader);
-        final Class<?> chatMessageFactoryClass = findClass("tv.twitch.android.social.c", lpparam.classLoader);
-        final Class<?> glideChatImageTargetInterfaceClass = findClass("tv.twitch.android.social.m.a", lpparam.classLoader);
-        final Class<?> clickableUsernameClass = findClass("tv.twitch.android.social.k", lpparam.classLoader);
-        final Class<?> usernameClickableSpanInterfaceClass = findClass("tv.twitch.android.social.k.a", lpparam.classLoader);
+        final Class<?> systemMessageTypeClass = findClass("tv.twitch.android.adapters.c.o", lpparam.classLoader);
+        final Class<?> chatMessageFactoryClass = findClass("tv.twitch.android.social.h", lpparam.classLoader);
+        final Class<?> glideChatImageTargetInterfaceClass = findClass("tv.twitch.android.social.s.a", lpparam.classLoader);
+        final Class<?> clickableUsernameClass = findClass("tv.twitch.android.social.q", lpparam.classLoader);
+        final Class<?> usernameClickableSpanInterfaceClass = findClass("tv.twitch.android.social.q.a", lpparam.classLoader);
         final Class<?> twitchUrlSpanInterfaceClass = findClass("tv.twitch.android.util.androidUI.TwitchURLSpan.a", lpparam.classLoader);
         final Class<?> webViewDialogFragmentEnumClass = findClass("tv.twitch.android.app.core.WebViewDialogFragment.a", lpparam.classLoader);
-        final Class<?> chatMessageInterfaceClass = findClass("tv.twitch.android.social.f", lpparam.classLoader);
+        final Class<?> chatMessageInterfaceClass = findClass("tv.twitch.android.social.k", lpparam.classLoader);
         final Class<?> chatBadgeImageClass = findClass("tv.twitch.chat.ChatBadgeImage", lpparam.classLoader);
         final Class<?> chatBitsTokenClass = findClass("tv.twitch.chat.ChatBitsToken", lpparam.classLoader);
-        final Class<?> cheermotesHelperClass = findClass("tv.twitch.android.app.bits.w", lpparam.classLoader);
+        final Class<?> cheermotesHelperClass = findClass("tv.twitch.android.app.bits.t", lpparam.classLoader);
         final Class<?> chommentModelDelegateClass = findClass("tv.twitch.android.models.chomments.ChommentModelDelegate", lpparam.classLoader);
 
         // This is called when a chat widget gets a channel name attached to it
         // It sets up all the channel specific stuff (bttv/ffz emotes, etc)
-        findAndHookMethod(chatViewClass, "a", chatInfoClass, new XC_MethodHook() {
+        findAndHookMethod(chatViewDelegateClass, "a", chatInfoClass, new XC_MethodHook() {
             @Override
             protected void afterHookedMethod(MethodHookParam param) throws Throwable {
                 final String channelInfo = (String) callMethod(param.args[0], "getName");
@@ -193,17 +193,17 @@ public class Main implements IXposedHookLoadPackage {
         });
 
         // Add timestamps to the beginning of every message
-        findAndHookConstructor(newMessageRecyclerItemClass, Context.class, int.class, String.class, String.class, int.class, CharSequence.class, List.class, systemMessageTypeClass, float.class, int.class, float.class, new XC_MethodHook() {
+        findAndHookConstructor(newMessageRecyclerItemClass, Context.class, String.class, int.class, String.class, String.class, int.class, CharSequence.class, List.class, systemMessageTypeClass, float.class, int.class, float.class, new XC_MethodHook() {
             @Override
             protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
                 if (prefShowTimeStamps) {
                     SimpleDateFormat formatter = new SimpleDateFormat("h:mm ", Locale.US);
                     SpannableString dateString = SpannableString.valueOf(formatter.format(new Date()));
                     dateString.setSpan(new RelativeSizeSpan(0.75f), 0, dateString.length() - 1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-                    SpannableString messageSpan = (SpannableString) param.args[5];
+                    SpannableString messageSpan = (SpannableString) param.args[6];
                     SpannableStringBuilder message = new SpannableStringBuilder(dateString);
                     message.append(messageSpan);
-                    param.args[5] = SpannableString.valueOf(message);
+                    param.args[6] = SpannableString.valueOf(message);
                 }
             }
         });
@@ -265,7 +265,7 @@ public class Main implements IXposedHookLoadPackage {
                     if (numBits > 0) {
                         setIntField(bit, "numBits", numBits);
                         setObjectField(bit, "prefix", "cheer");
-                        SpannableString bitString = (SpannableString) callMethod(param.thisObject, "a", bit, getObjectField(param.thisObject, "d"), param.args[1], param.args[10]);
+                        SpannableString bitString = (SpannableString) callMethod(param.thisObject, "a", bit, getObjectField(param.thisObject, "c"), param.args[1], param.args[10]);
                         if (bitString != null) {
                             msg.append(" ");
                             msg.append(bitString);
