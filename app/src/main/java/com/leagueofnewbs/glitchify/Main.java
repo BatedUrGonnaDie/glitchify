@@ -123,18 +123,20 @@ public class Main implements IXposedHookLoadPackage {
         final Class<?> chatInfoClass = findClass("tv.twitch.android.models.ChannelInfo", lpparam.classLoader);
         final Class<?> chatControllerClass = findClass("tv.twitch.android.b.a", lpparam.classLoader);
         final Class<?> chatUpdaterClass = findClass("tv.twitch.android.b.a.b", lpparam.classLoader);
-        final Class<?> chatViewDelegateClass = findClass("tv.twitch.android.social.d.i", lpparam.classLoader);
-        final Class<?> newMessageRecyclerItemClass = findClass("tv.twitch.android.adapters.c.j", lpparam.classLoader);
-        final Class<?> newChannelChatAdapterClass = findClass("tv.twitch.android.adapters.r", lpparam.classLoader);
-        final Class<?> chatUtilClass = findClass("tv.twitch.android.util.k", lpparam.classLoader);
-        final Class<?> systemMessageTypeClass = findClass("tv.twitch.android.adapters.c.o", lpparam.classLoader);
-        final Class<?> chatMessageFactoryClass = findClass("tv.twitch.android.social.h", lpparam.classLoader);
-        final Class<?> glideChatImageTargetInterfaceClass = findClass("tv.twitch.android.social.s.a", lpparam.classLoader);
-        final Class<?> clickableUsernameClass = findClass("tv.twitch.android.social.q", lpparam.classLoader);
-        final Class<?> usernameClickableSpanInterfaceClass = findClass("tv.twitch.android.social.q.a", lpparam.classLoader);
+        final Class<?> chatViewDelegateClass = findClass("tv.twitch.android.social.d.j", lpparam.classLoader);
+        final Class<?> newMessageRecyclerItemClass = findClass("tv.twitch.android.adapters.c.k", lpparam.classLoader);
+        final Class<?> newChannelChatAdapterClass = findClass("tv.twitch.android.adapters.s", lpparam.classLoader);
+        final Class<?> chatUtilClass = findClass("tv.twitch.android.util.l", lpparam.classLoader);
+        final Class<?> deletedMessageClickableSpanClass = findClass("tv.twitch.android.util.androidUI.d", lpparam.classLoader);
+        final Class<?> systemMessageTypeClass = findClass("tv.twitch.android.adapters.c.p", lpparam.classLoader);
+        final Class<?> chatMessageFactoryClass = findClass("tv.twitch.android.social.i", lpparam.classLoader);
+        final Class<?> glideChatImageTargetInterfaceClass = findClass("tv.twitch.android.social.t.a", lpparam.classLoader);
+        final Class<?> clickableUsernameClass = findClass("tv.twitch.android.social.r", lpparam.classLoader);
+        final Class<?> usernameClickableSpanInterfaceClass = findClass("tv.twitch.android.social.r.a", lpparam.classLoader);
         final Class<?> twitchUrlSpanInterfaceClass = findClass("tv.twitch.android.util.androidUI.TwitchURLSpan.a", lpparam.classLoader);
         final Class<?> webViewDialogFragmentEnumClass = findClass("tv.twitch.android.app.core.WebViewDialogFragment.a", lpparam.classLoader);
-        final Class<?> chatMessageInterfaceClass = findClass("tv.twitch.android.social.k", lpparam.classLoader);
+        final Class<?> chatFiltersSettingsClass = findClass("tv.twitch.android.app.settings.preferences.b", lpparam.classLoader);
+        final Class<?> chatMessageInterfaceClass = findClass("tv.twitch.android.social.l", lpparam.classLoader);
         final Class<?> chatBadgeImageClass = findClass("tv.twitch.chat.ChatBadgeImage", lpparam.classLoader);
         final Class<?> chatBitsTokenClass = findClass("tv.twitch.chat.ChatBitsToken", lpparam.classLoader);
         final Class<?> cheermotesHelperClass = findClass("tv.twitch.android.app.bits.t", lpparam.classLoader);
@@ -171,17 +173,21 @@ public class Main implements IXposedHookLoadPackage {
 
         // This is what actually goes through and strikes out the messages
         // If show deleted is false this will replace with <message deleted>
-        findAndHookMethod(chatUtilClass, "a", Spanned.class, String.class, new XC_MethodHook() {
+        findAndHookMethod(chatUtilClass, "a", Spanned.class, String.class, deletedMessageClickableSpanClass, new XC_MethodHook() {
             @Override
             protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
                 if (prefShowDeletedMessages) {
                     Spanned messageSpan = (Spanned) param.args[0];
                     Object[] spans = messageSpan.getSpans(0, messageSpan.length(), clickableUsernameClass);
+                    if ((spans.length == 0 ? 1 : null) != null) {
+                        param.setResult(null);
+                        return;
+                    }
+
                     int spanEnd = messageSpan.getSpanEnd(spans[0]);
-                    int length = 2;
-                    int i = spanEnd + length;
-                    if (i < messageSpan.length() && messageSpan.subSequence(spanEnd, i).toString().equals(": ")) {
-                        spanEnd += length;
+                    int length = 2 + spanEnd;
+                    if (length < messageSpan.length() && messageSpan.subSequence(spanEnd, length).toString().equals(": ")) {
+                        spanEnd = length;
                     }
                     SpannableStringBuilder ssb = new SpannableStringBuilder(messageSpan, 0, spanEnd);
                     SpannableStringBuilder ssb2 = new SpannableStringBuilder(messageSpan, spanEnd, messageSpan.length());
@@ -193,7 +199,7 @@ public class Main implements IXposedHookLoadPackage {
         });
 
         // Add timestamps to the beginning of every message
-        findAndHookConstructor(newMessageRecyclerItemClass, Context.class, String.class, int.class, String.class, String.class, int.class, CharSequence.class, List.class, systemMessageTypeClass, float.class, int.class, float.class, new XC_MethodHook() {
+        findAndHookConstructor(newMessageRecyclerItemClass, Context.class, String.class, int.class, String.class, String.class, int.class, CharSequence.class, List.class, systemMessageTypeClass, float.class, int.class, float.class, boolean.class, new XC_MethodHook() {
             @Override
             protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
                 if (prefShowTimeStamps) {
@@ -228,7 +234,7 @@ public class Main implements IXposedHookLoadPackage {
         });
 
         // Inject all badges and emotes into the finished message
-        findAndHookMethod(chatMessageFactoryClass, "a", chatMessageInterfaceClass, glideChatImageTargetInterfaceClass, boolean.class, boolean.class, boolean.class, int.class, int.class, usernameClickableSpanInterfaceClass, twitchUrlSpanInterfaceClass, webViewDialogFragmentEnumClass, ArrayList.class, String.class, boolean.class, new XC_MethodHook() {
+        findAndHookMethod(chatMessageFactoryClass, "a", chatMessageInterfaceClass, glideChatImageTargetInterfaceClass, boolean.class, boolean.class, boolean.class, int.class, int.class, usernameClickableSpanInterfaceClass, twitchUrlSpanInterfaceClass, webViewDialogFragmentEnumClass, ArrayList.class, String.class, boolean.class, chatFiltersSettingsClass, new XC_MethodHook() {
             @Override
             protected void  beforeHookedMethod(MethodHookParam param) throws Throwable {
                 setAdditionalInstanceField(param.thisObject, "allowBitInsertion", false);
