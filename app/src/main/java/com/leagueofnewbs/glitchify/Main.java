@@ -121,22 +121,22 @@ public class Main implements IXposedHookLoadPackage {
 
         // These are all the different class definitions that are needed in the function hooking
         final Class<?> chatInfoClass = findClass("tv.twitch.android.models.ChannelInfo", lpparam.classLoader);
-        final Class<?> chatControllerClass = findClass("tv.twitch.android.b.a", lpparam.classLoader);
-        final Class<?> chatUpdaterClass = findClass("tv.twitch.android.b.a.c", lpparam.classLoader);
-        final Class<?> chatViewDelegateClass = findClass("tv.twitch.android.social.d.j", lpparam.classLoader);
-        final Class<?> newMessageRecyclerItemClass = findClass("tv.twitch.android.adapters.c.k", lpparam.classLoader);
-        final Class<?> newChannelChatAdapterClass = findClass("tv.twitch.android.adapters.d", lpparam.classLoader);
+        final Class<?> chatControllerClass = findClass("tv.twitch.android.b.b", lpparam.classLoader);
+        final Class<?> chatUpdaterClass = findClass("tv.twitch.android.b.b.c", lpparam.classLoader);
+        final Class<?> chatViewDelegateClass = findClass("tv.twitch.android.social.d.n", lpparam.classLoader);
+        final Class<?> messageRecyclerItemClass = findClass("tv.twitch.android.adapters.c.k", lpparam.classLoader);
+        final Class<?> channelChatAdapterClass = findClass("tv.twitch.android.adapters.d", lpparam.classLoader);
         final Class<?> chatUtilClass = findClass("tv.twitch.android.util.l", lpparam.classLoader);
         final Class<?> deletedMessageClickableSpanClass = findClass("tv.twitch.android.util.androidUI.d", lpparam.classLoader);
         final Class<?> systemMessageTypeClass = findClass("tv.twitch.android.adapters.c.o", lpparam.classLoader);
-        final Class<?> chatMessageFactoryClass = findClass("tv.twitch.android.social.j", lpparam.classLoader);
-        final Class<?> glideChatImageTargetInterfaceClass = findClass("tv.twitch.android.social.x.a", lpparam.classLoader);
-        final Class<?> clickableUsernameClass = findClass("tv.twitch.android.social.v", lpparam.classLoader);
-        final Class<?> usernameClickableSpanInterfaceClass = findClass("tv.twitch.android.social.v.a", lpparam.classLoader);
+        final Class<?> chatMessageFactoryClass = findClass("tv.twitch.android.social.n", lpparam.classLoader);
+        final Class<?> glideChatImageTargetInterfaceClass = findClass("tv.twitch.android.social.ad.a", lpparam.classLoader);
+        final Class<?> clickableUsernameClass = findClass("tv.twitch.android.social.ab", lpparam.classLoader);
+        final Class<?> usernameClickableSpanInterfaceClass = findClass("tv.twitch.android.social.ab.a", lpparam.classLoader);
         final Class<?> twitchUrlSpanInterfaceClass = findClass("tv.twitch.android.util.androidUI.TwitchURLSpan.a", lpparam.classLoader);
         final Class<?> webViewDialogFragmentEnumClass = findClass("tv.twitch.android.app.core.WebViewDialogFragment.a", lpparam.classLoader);
         final Class<?> chatFiltersSettingsClass = findClass("tv.twitch.android.app.settings.preferences.b", lpparam.classLoader);
-        final Class<?> chatMessageInterfaceClass = findClass("tv.twitch.android.social.m", lpparam.classLoader);
+        final Class<?> chatMessageInterfaceClass = findClass("tv.twitch.android.social.q", lpparam.classLoader);
         final Class<?> chatBadgeImageClass = findClass("tv.twitch.chat.ChatBadgeImage", lpparam.classLoader);
         final Class<?> chatBitsTokenClass = findClass("tv.twitch.chat.ChatBitsToken", lpparam.classLoader);
         final Class<?> cheermotesHelperClass = findClass("tv.twitch.android.app.bits.t", lpparam.classLoader);
@@ -199,7 +199,7 @@ public class Main implements IXposedHookLoadPackage {
         });
 
         // Add timestamps to the beginning of every message
-        findAndHookConstructor(newMessageRecyclerItemClass, Context.class, String.class, int.class, String.class, String.class, int.class, CharSequence.class, List.class, systemMessageTypeClass, float.class, int.class, float.class, boolean.class, new XC_MethodHook() {
+        findAndHookConstructor(messageRecyclerItemClass, Context.class, String.class, int.class, String.class, String.class, int.class, CharSequence.class, List.class, systemMessageTypeClass, float.class, int.class, float.class, boolean.class, new XC_MethodHook() {
             @Override
             protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
                 if (prefShowTimeStamps) {
@@ -226,7 +226,7 @@ public class Main implements IXposedHookLoadPackage {
         });
 
         // Prevent overriding of chat history length
-        findAndHookConstructor(newChannelChatAdapterClass, int.class, new XC_MethodHook() {
+        findAndHookConstructor(channelChatAdapterClass, int.class, new XC_MethodHook() {
             @Override
             protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
                 param.args[0] = prefChatScrollbackLength;
