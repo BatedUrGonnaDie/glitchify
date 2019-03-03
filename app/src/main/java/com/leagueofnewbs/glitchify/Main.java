@@ -1,12 +1,10 @@
 package com.leagueofnewbs.glitchify;
 
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
-import android.text.style.ForegroundColorSpan;
 import android.text.style.RelativeSizeSpan;
 import android.text.style.StrikethroughSpan;
 
@@ -31,7 +29,6 @@ import java.util.Date;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Locale;
-import java.util.Set;
 
 import javax.net.ssl.HttpsURLConnection;
 
@@ -123,7 +120,7 @@ public class Main implements IXposedHookLoadPackage {
         final Class<?> chatInfoClass = findClass("tv.twitch.android.models.ChannelInfo", lpparam.classLoader);
         final Class<?> chatControllerClass = findClass("tv.twitch.android.b.b", lpparam.classLoader);
         final Class<?> chatUpdaterClass = findClass("tv.twitch.android.b.b.c", lpparam.classLoader);
-        final Class<?> chatViewDelegateClass = findClass("tv.twitch.android.social.d.n", lpparam.classLoader);
+        final Class<?> chatViewPresenterClass = findClass("tv.twitch.android.social.a.o", lpparam.classLoader);
         final Class<?> messageRecyclerItemClass = findClass("tv.twitch.android.adapters.c.k", lpparam.classLoader);
         final Class<?> channelChatAdapterClass = findClass("tv.twitch.android.adapters.d", lpparam.classLoader);
         final Class<?> chatUtilClass = findClass("tv.twitch.android.util.l", lpparam.classLoader);
@@ -144,10 +141,10 @@ public class Main implements IXposedHookLoadPackage {
 
         // This is called when a chat widget gets a channel name attached to it
         // It sets up all the channel specific stuff (bttv/ffz emotes, etc)
-        findAndHookMethod(chatViewDelegateClass, "a", chatInfoClass, new XC_MethodHook() {
+        findAndHookMethod(chatViewPresenterClass, "b", new XC_MethodHook() {
             @Override
             protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-                final String channelInfo = (String) callMethod(param.args[0], "getName");
+                final String channelInfo = (String) callMethod(getObjectField(param.thisObject, "j"), "getName");
                 Thread roomThread = new Thread(new Runnable() {
                     @Override
                     public void run() {
