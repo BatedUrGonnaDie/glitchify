@@ -117,21 +117,21 @@ public class Main implements IXposedHookLoadPackage {
 
 
         // These are all the different class definitions that are needed in the function hooking
-        final Class<?> chatControllerClass = findClass("tv.twitch.android.c.b", lpparam.classLoader);
-        final Class<?> chatUpdaterClass = findClass("tv.twitch.android.c.b.c", lpparam.classLoader);
+        final Class<?> chatControllerClass = findClass("tv.twitch.android.f.a", lpparam.classLoader);
+        final Class<?> chatUpdaterClass = findClass("tv.twitch.android.f.a$c", lpparam.classLoader);
         final Class<?> chatViewPresenterClass = findClass("tv.twitch.android.social.c.o", lpparam.classLoader);
-        final Class<?> messageRecyclerItemClass = findClass("tv.twitch.android.adapters.c.k", lpparam.classLoader);
-        final Class<?> channelChatAdapterClass = findClass("tv.twitch.android.adapters.d", lpparam.classLoader);
+        final Class<?> messageRecyclerItemClass = findClass("tv.twitch.android.a.c.k", lpparam.classLoader);
+        final Class<?> channelChatAdapterClass = findClass("tv.twitch.android.a.d", lpparam.classLoader);
         final Class<?> chatUtilClass = findClass("tv.twitch.android.util.l", lpparam.classLoader);
         final Class<?> deletedMessageClickableSpanClass = findClass("tv.twitch.android.util.androidUI.d", lpparam.classLoader);
-        final Class<?> systemMessageTypeClass = findClass("tv.twitch.android.adapters.c.o", lpparam.classLoader);
+        final Class<?> systemMessageTypeClass = findClass("tv.twitch.android.a.c.o", lpparam.classLoader);
         final Class<?> chatMessageFactoryClass = findClass("tv.twitch.android.social.d", lpparam.classLoader);
         final Class<?> glideChatImageTargetInterfaceClass = findClass("tv.twitch.android.social.o.a", lpparam.classLoader);
         final Class<?> clickableUsernameClass = findClass("tv.twitch.android.social.m", lpparam.classLoader);
-        final Class<?> usernameClickableSpanInterfaceClass = findClass("tv.twitch.android.social.m.a", lpparam.classLoader);
+        final Class<?> usernameClickableSpanInterfaceClass = findClass("tv.twitch.android.social.m$a", lpparam.classLoader);
         final Class<?> twitchUrlSpanInterfaceClass = findClass("tv.twitch.android.util.androidUI.TwitchURLSpan.a", lpparam.classLoader);
-        final Class<?> webViewDialogFragmentEnumClass = findClass("tv.twitch.android.app.core.WebViewDialogFragment.a", lpparam.classLoader);
-        final Class<?> chatFiltersSettingsClass = findClass("tv.twitch.android.app.settings.preferences.b", lpparam.classLoader);
+        final Class<?> chatFiltersSettingsClass = findClass("tv.twitch.android.app.settings.h.b", lpparam.classLoader);
+        final Class<?> webViewDialogFragmentEnumClass = findClass("tv.twitch.android.app.core.bj$a", lpparam.classLoader);
         final Class<?> chatMessageInterfaceClass = findClass("tv.twitch.android.social.g", lpparam.classLoader);
         final Class<?> chatBadgeImageClass = findClass("tv.twitch.chat.ChatBadgeImage", lpparam.classLoader);
         final Class<?> chatBitsTokenClass = findClass("tv.twitch.chat.ChatBitsToken", lpparam.classLoader);
