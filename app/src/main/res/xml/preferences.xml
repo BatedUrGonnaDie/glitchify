@@ -61,7 +61,7 @@
             android:title="@string/preference_prevent_channel_clear_title" />
     </PreferenceCategory>
 
-    <PreferenceCategory android:title="@string/preference_random_chat">
+    <PreferenceCategory android:title="@string/preference_random_options">
         <SwitchPreference
             android:defaultValue="true"
             android:key="@string/preference_show_timestamps_enable"
@@ -78,6 +78,11 @@
             android:key="@string/preference_color_adjust_enable"
             android:title="@string/preference_color_adjust_title"
             android:summary="@string/preference_color_adjust_summary" />
+        <SwitchPreference
+            android:defaultValue="false"
+            android:key="@string/preference_hide_video_ads_enable"
+            android:title="@string/preference_hide_video_ads_title"
+            android:summary="@string/preference_hide_video_ads_summary" />
     </PreferenceCategory>
 
 </PreferenceScreen>

@@ -52,7 +52,7 @@
     <string name="preference_override_video_quality_title">Override Saved Video Quality</string>
     <string name="preference_override_video_quality_summary">Use value below instead of your last selected quality for new streams</string>
 
-    <string name="preference_random_chat">Random Chat Options</string>
+    <string name="preference_random_options">Random Options</string>
     <string name="preference_show_timestamps_enable">show_timestamps</string>
     <string name="preference_show_timestamps_title">Show timestamps in chat</string>
     <string name="preference_show_timestamps_summary">Adds a timestamp of when the message was received</string>
@@ -64,4 +64,8 @@
     <string name="preference_color_adjust_enable">color_adjust</string>
     <string name="preference_color_adjust_title">Adjust colors to be more readable</string>
     <string name="preference_color_adjust_summary">Affects user colors in chat</string>
+
+    <string name="preference_hide_video_ads_enable">hide_video_ads</string>
+    <string name="preference_hide_video_ads_title">Experimental: Hide video player ads</string>
+    <string name="preference_hide_video_ads_summary">Prevent ads from being loaded while watching vods</string>
 </resources>

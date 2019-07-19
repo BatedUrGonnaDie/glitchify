@@ -1,28 +1,28 @@
 package com.leagueofnewbs.glitchify;
 
-public class Color {
+class Color {
 
     private int r;
     private int g;
     private int b;
-    private int a;
+    private final int a;
 
-    public Color(int color) {
+    Color(int color) {
         b = color & 255;
         g = (color >> 8) & 255;
         r = (color >> 16) & 255;
         a = (color >> 24) & 255;
     }
 
-    public Integer toInt() {
-        Integer rgba = a;
+    Integer toInt() {
+        int rgba = a;
         rgba = (rgba << 8) + r;
         rgba = (rgba << 8) + g;
         rgba = (rgba << 8) + b;
         return rgba;
     }
 
-    public void brighten(double amount) {
+    void brighten(double amount) {
         amount = Math.round(255 * (amount / 100));
 
         r = Math.max(0, Math.min(255, r + (int) amount));
@@ -30,7 +30,7 @@ public class Color {
         b = Math.max(0, Math.min(255, b + (int) amount));
     }
 
-    public double luminance() {
+    double luminance() {
         double red = bit2linear(r / 255d);
         double green = bit2linear(g / 255d);
         double blue = bit2linear(b / 255d);
