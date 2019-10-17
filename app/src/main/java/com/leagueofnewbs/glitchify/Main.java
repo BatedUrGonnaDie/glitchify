@@ -8,6 +8,7 @@ import android.text.Spanned;
 import android.text.SpannedString;
 import android.text.style.RelativeSizeSpan;
 import android.text.style.StrikethroughSpan;
+import android.util.Log;
 import android.webkit.WebView;
 
 import static de.robv.android.xposed.XposedHelpers.*;
@@ -16,6 +17,7 @@ import de.robv.android.xposed.IXposedHookZygoteInit;
 import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XSharedPreferences;
 import de.robv.android.xposed.XposedBridge;
+import de.robv.android.xposed.XposedHelpers;
 import de.robv.android.xposed.callbacks.XC_LoadPackage.LoadPackageParam;
 
 import org.json.JSONArray;
@@ -49,6 +51,7 @@ public class Main implements IXposedHookLoadPackage, IXposedHookZygoteInit {
     private static Object customModBadgeImage;
     private static final String ffzAPIURL = "https://api.frankerfacez.com/v1/";
     private static final String bttvAPIURL = "https://api.betterttv.net/2/";
+    private static final String logTag = "Glitchify";
 
     public void initZygote(IXposedHookZygoteInit.StartupParam startupParam) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
@@ -106,32 +109,33 @@ public class Main implements IXposedHookLoadPackage, IXposedHookZygoteInit {
 
 
         // These are all the different class definitions that are needed in the function hooking
-        final Class<?> chatControllerClass = findClass("tv.twitch.a.j.H", lpparam.classLoader);
-        final Class<?> chatUpdaterClass = findClass("tv.twitch.a.j.H$c", lpparam.classLoader);
-        final Class<?> chatViewPresenterClass = findClass("tv.twitch.a.n.b.ea", lpparam.classLoader);
-        final Class<?> messageRecyclerItemClass = findClass("tv.twitch.android.adapters.b.k", lpparam.classLoader);
-        final Class<?> channelChatAdapterClass = findClass("tv.twitch.a.l.d.a.a", lpparam.classLoader);
-        final Class<?> chatUtilClass = findClass("tv.twitch.a.l.d.v.d", lpparam.classLoader);
-        final Class<?> deletedMessageClickableSpanClass = findClass("tv.twitch.a.l.d.v.g", lpparam.classLoader);
-        final Class<?> systemMessageTypeClass = findClass("tv.twitch.a.l.d.a.h", lpparam.classLoader);
-        final Class<?> chatMessageFactoryClass = findClass("tv.twitch.a.n.b", lpparam.classLoader);
-        final Class<?> clickableUsernameClass = findClass("tv.twitch.a.l.d.v.f", lpparam.classLoader);
-        final Class<?> iClickableUsernameSpanListenerClass = findClass("tv.twitch.a.l.d.g.b", lpparam.classLoader);
-        final Class<?> twitchUrlSpanInterfaceClass = findClass("tv.twitch.android.util.androidUI.TwitchURLSpan.a", lpparam.classLoader);
-        final Class<?> censoredMessageTrackingInfoClass = findClass("tv.twitch.a.l.d.t.c", lpparam.classLoader);
-        final Class<?> webViewDialogFragmentEnumClass = findClass("tv.twitch.android.app.core.Za$a", lpparam.classLoader);
-        final Class<?> chatMessageInterfaceClass = findClass("tv.twitch.a.l.d.f", lpparam.classLoader);
+        final Class<?> chatControllerClass = findClass("tv.twitch.a.k.c0", lpparam.classLoader);
+        final Class<?> chatUpdaterClass = findClass("tv.twitch.a.k.c0$h", lpparam.classLoader);
+        final Class<?> chatViewPresenterClass = findClass("tv.twitch.a.o.l.k", lpparam.classLoader);
+        final Class<?> messageRecyclerItemClass = findClass("tv.twitch.android.adapters.n.e", lpparam.classLoader);
+        final Class<?> channelChatAdapterClass = findClass("tv.twitch.a.m.d.b0.a", lpparam.classLoader);
+        final Class<?> chatUtilClass = findClass("tv.twitch.a.m.d.w0.c", lpparam.classLoader);
+        final Class<?> deletedMessageClickableSpanClass = findClass("tv.twitch.a.m.d.w0.g", lpparam.classLoader);
+        final Class<?> systemMessageTypeClass = findClass("tv.twitch.a.m.d.b0.f", lpparam.classLoader);
+        final Class<?> chatMessageFactoryClass = findClass("tv.twitch.a.o.a", lpparam.classLoader);
+        final Class<?> clickableUsernameSpanClass = findClass("tv.twitch.a.m.d.w0.e", lpparam.classLoader);
+        final Class<?> iClickableUsernameSpanListenerClass = findClass("tv.twitch.a.m.d.h0.b", lpparam.classLoader);
+        final Class<?> twitchUrlSpanInterfaceClass = findClass("tv.twitch.android.util.androidUI.TwitchURLSpan$a", lpparam.classLoader);
+        final Class<?> censoredMessageTrackingInfoClass = findClass("tv.twitch.a.m.d.u0.c", lpparam.classLoader);
+        final Class<?> webViewDialogFragmentEnumClass = findClass("tv.twitch.android.app.core.w1$b", lpparam.classLoader);
+        final Class<?> chatMessageInterfaceClass = findClass("tv.twitch.a.m.d.e", lpparam.classLoader);
         final Class<?> chatBadgeImageClass = findClass("tv.twitch.chat.ChatBadgeImage", lpparam.classLoader);
         final Class<?> bitsTokenClass = findClass("tv.twitch.android.models.chat.MessageToken$BitsToken", lpparam.classLoader);
-        final Class<?> cheermotesHelperClass = findClass("tv.twitch.android.shared.chat.bits.j", lpparam.classLoader);
+        final Class<?> cheermotesHelperClass = findClass("tv.twitch.android.shared.chat.bits.h", lpparam.classLoader);
         final Class<?> chommentModelDelegateClass = findClass("tv.twitch.android.models.ChommentModelDelegate", lpparam.classLoader);
         final Class<?> channelInfoClass = findClass("tv.twitch.android.models.channel.ChannelInfo", lpparam.classLoader);
         final Class<?> streamTypeClass = findClass("tv.twitch.android.models.streams.StreamType", lpparam.classLoader);
         //noinspection unchecked
-        final Class<? extends Enum> urlDrawableClass = (Class<? extends Enum>) findClass("tv.twitch.a.l.k.b.c.d$b", lpparam.classLoader);
-        final Class<?> vodPlayerPresenterClass = findClass("tv.twitch.a.l.f.h.P", lpparam.classLoader);
+        final Class<? extends Enum> urlDrawableClass = (Class<? extends Enum>) findClass("tv.twitch.a.m.m.b.p.e$b", lpparam.classLoader);
+        final Class<?> vodPlayerPresenterClass = findClass("tv.twitch.a.m.g.b0.q", lpparam.classLoader);
         final Class<?> vodModelClass = findClass("tv.twitch.android.models.videos.VodModel", lpparam.classLoader);
-        final Class<?> googleAdProviderClass = findClass("com.google.ads.interactivemedia.v3.internal.aea", lpparam.classLoader);
+        final Class<?> videoAdManagerClass = findClass("tv.twitch.android.player.ads.VideoAdManager", lpparam.classLoader);
+        // Updated combined bits insertion object field to find bits helper in ChatMessageFactory
 
         // This is called when a vod chat widget gets a channel name attached to it
         // It sets up all the channel specific stuff (bttv/ffz emotes, etc)
@@ -160,7 +164,7 @@ public class Main implements IXposedHookLoadPackage, IXposedHookZygoteInit {
             protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
                 if (preferences.showDeletedMessages()) {
                     Spanned messageSpan = (Spanned) param.args[0];
-                    Object[] spans = messageSpan.getSpans(0, messageSpan.length(), clickableUsernameClass);
+                    Object[] spans = messageSpan.getSpans(0, messageSpan.length(), clickableUsernameSpanClass);
                     if ((spans.length == 0 ? 1 : null) != null) {
                         param.setResult(null);
                         return;
@@ -260,7 +264,7 @@ public class Main implements IXposedHookLoadPackage, IXposedHookZygoteInit {
                     int numBits = getIntField(chatMessageInfo, "numBitsSent");
                     if (numBits > 0) {
                         Object bit = newInstance(bitsTokenClass, "cheer", numBits);
-                        SpannableString bitString = (SpannableString) callMethod(param.thisObject, "a", bit, getObjectField(param.thisObject, "c"));
+                        SpannableString bitString = (SpannableString) callMethod(param.thisObject, "a", bit, getObjectField(param.thisObject, "b"));
                         if (bitString != null) {
                             msg.append(" ");
                             msg.append(bitString);
@@ -303,11 +307,11 @@ public class Main implements IXposedHookLoadPackage, IXposedHookZygoteInit {
             }
         });
 
-        findAndHookMethod(googleAdProviderClass, "shouldOverrideUrlLoading", WebView.class, String.class, new XC_MethodHook() {
+        XposedBridge.hookAllMethods(videoAdManagerClass, "requestAds", new XC_MethodHook() {
             @Override
             protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
                 if (preferences.hideAds()) {
-                    param.setResult(true);
+                    param.setResult(null);
                 }
             }
         });
@@ -574,7 +578,7 @@ public class Main implements IXposedHookLoadPackage, IXposedHookZygoteInit {
         }
         output += e.getMessage();
         XposedBridge.log(output);
-        XposedBridge.log(e);
+        Log.e(logTag, output, e);
     }
 
 }
