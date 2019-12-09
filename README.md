@@ -22,3 +22,7 @@ This project uses Android Studio for the IDE.  The example to get started will u
 2. Open the project with Android Studio.
 3. Start making a patch or feature.
 4. Submit a PR with said patch or feature.
+
+### Proguard only PR's
+When submitting patches for *only* changes to the proguard class names, please increment
+`versionCode` and `versionName`'s patch value in `app/src/main/AndroidManifest.xml`.
