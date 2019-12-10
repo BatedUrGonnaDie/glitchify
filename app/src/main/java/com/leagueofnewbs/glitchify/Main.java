@@ -108,20 +108,20 @@ public class Main implements IXposedHookLoadPackage, IXposedHookZygoteInit {
 
         // These are all the different class definitions that are needed in the function hooking
         final Class<?> chatControllerClass = findClass("tv.twitch.a.k.c0", lpparam.classLoader);
-        final Class<?> chatUpdaterClass = findClass("tv.twitch.a.k.c0$h", lpparam.classLoader);
+        final Class<?> chatUpdaterClass = findClass("tv.twitch.a.k.c0$f", lpparam.classLoader);
         final Class<?> chatViewPresenterClass = findClass("tv.twitch.a.o.h.f", lpparam.classLoader);
-        final Class<?> messageRecyclerItemClass = findClass("tv.twitch.android.adapters.k.e", lpparam.classLoader);
-        final Class<?> channelChatAdapterClass = findClass("tv.twitch.a.m.d.b0.a", lpparam.classLoader);
-        final Class<?> chatUtilClass = findClass("tv.twitch.a.m.d.z0.c", lpparam.classLoader);
-        final Class<?> deletedMessageClickableSpanClass = findClass("tv.twitch.a.m.d.z0.g", lpparam.classLoader);
-        final Class<?> systemMessageTypeClass = findClass("tv.twitch.a.m.d.b0.f", lpparam.classLoader);
+        final Class<?> messageRecyclerItemClass = findClass("tv.twitch.android.adapters.f.d", lpparam.classLoader);
+        final Class<?> channelChatAdapterClass = findClass("tv.twitch.a.m.e.b0.a", lpparam.classLoader);
+        final Class<?> chatUtilClass = findClass("tv.twitch.a.m.e.y0.d", lpparam.classLoader);
+        final Class<?> deletedMessageClickableSpanClass = findClass("tv.twitch.a.m.e.y0.h", lpparam.classLoader);
+        final Class<?> systemMessageTypeClass = findClass("tv.twitch.a.m.e.b0.f", lpparam.classLoader);
         final Class<?> chatMessageFactoryClass = findClass("tv.twitch.a.o.a", lpparam.classLoader);
-        final Class<?> clickableUsernameSpanClass = findClass("tv.twitch.a.m.d.z0.e", lpparam.classLoader);
-        final Class<?> iClickableUsernameSpanListenerClass = findClass("tv.twitch.a.m.d.h0.b", lpparam.classLoader);
-        final Class<?> twitchUrlSpanInterfaceClass = findClass("tv.twitch.android.util.androidUI.TwitchURLSpan$a", lpparam.classLoader);
-        final Class<?> censoredMessageTrackingInfoClass = findClass("tv.twitch.a.m.d.x0.c", lpparam.classLoader);
-        final Class<?> webViewDialogFragmentEnumClass = findClass("tv.twitch.android.app.core.z1$b", lpparam.classLoader);
-        final Class<?> chatMessageInterfaceClass = findClass("tv.twitch.a.m.d.e", lpparam.classLoader);
+        final Class<?> clickableUsernameSpanClass = findClass("tv.twitch.a.m.e.y0.f", lpparam.classLoader);
+        final Class<?> iClickableUsernameSpanListenerClass = findClass("tv.twitch.a.m.e.h0.a", lpparam.classLoader);
+        final Class<?> twitchUrlSpanInterfaceClass = findClass("tv.twitch.a.m.x.b.p.h", lpparam.classLoader);//rename
+        final Class<?> censoredMessageTrackingInfoClass = findClass("tv.twitch.a.m.e.w0.c", lpparam.classLoader);
+        final Class<?> webViewDialogFragmentEnumClass = findClass("tv.twitch.android.models.webview.WebViewSource", lpparam.classLoader);//test
+        final Class<?> chatMessageInterfaceClass = findClass("tv.twitch.a.m.e.e", lpparam.classLoader);
         final Class<?> chatBadgeImageClass = findClass("tv.twitch.chat.ChatBadgeImage", lpparam.classLoader);
         final Class<?> bitsTokenClass = findClass("tv.twitch.android.models.chat.MessageToken$BitsToken", lpparam.classLoader);
         final Class<?> cheermotesHelperClass = findClass("tv.twitch.android.shared.bits.w.f", lpparam.classLoader);
@@ -129,8 +129,8 @@ public class Main implements IXposedHookLoadPackage, IXposedHookZygoteInit {
         final Class<?> channelInfoClass = findClass("tv.twitch.android.models.channel.ChannelInfo", lpparam.classLoader);
         final Class<?> streamTypeClass = findClass("tv.twitch.android.models.streams.StreamType", lpparam.classLoader);
         //noinspection unchecked
-        final Class<? extends Enum> urlDrawableClass = (Class<? extends Enum>) findClass("tv.twitch.a.m.r.b.p.g$b", lpparam.classLoader);
-        final Class<?> vodPlayerPresenterClass = findClass("tv.twitch.a.m.k.e0.q", lpparam.classLoader);
+        final Class<? extends Enum> urlDrawableClass = (Class<? extends Enum>) findClass("tv.twitch.a.m.x.b.p.i$b", lpparam.classLoader);
+        final Class<?> vodPlayerPresenterClass = findClass("tv.twitch.a.m.q.h0.q", lpparam.classLoader);
         final Class<?> vodModelClass = findClass("tv.twitch.android.models.videos.VodModel", lpparam.classLoader);
         final Class<?> videoAdManagerClass = findClass("tv.twitch.android.player.ads.VideoAdManager", lpparam.classLoader);
         // Updated combined bits insertion object field to find bits helper in ChatMessageFactory
