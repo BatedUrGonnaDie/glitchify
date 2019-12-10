@@ -118,9 +118,9 @@ public class Main implements IXposedHookLoadPackage, IXposedHookZygoteInit {
         final Class<?> chatMessageFactoryClass = findClass("tv.twitch.a.o.a", lpparam.classLoader);
         final Class<?> clickableUsernameSpanClass = findClass("tv.twitch.a.m.e.y0.f", lpparam.classLoader);
         final Class<?> iClickableUsernameSpanListenerClass = findClass("tv.twitch.a.m.e.h0.a", lpparam.classLoader);
-        final Class<?> twitchUrlSpanInterfaceClass = findClass("tv.twitch.a.m.x.b.p.h", lpparam.classLoader);//rename
+        final Class<?> TwitchUrlSpanClickListenerInterfaceClass = findClass("tv.twitch.a.m.x.b.p.h", lpparam.classLoader);
         final Class<?> censoredMessageTrackingInfoClass = findClass("tv.twitch.a.m.e.w0.c", lpparam.classLoader);
-        final Class<?> webViewDialogFragmentEnumClass = findClass("tv.twitch.android.models.webview.WebViewSource", lpparam.classLoader);//test
+        final Class<?> webViewDialogFragmentEnumClass = findClass("tv.twitch.android.models.webview.WebViewSource", lpparam.classLoader);//changed
         final Class<?> chatMessageInterfaceClass = findClass("tv.twitch.a.m.e.e", lpparam.classLoader);
         final Class<?> chatBadgeImageClass = findClass("tv.twitch.chat.ChatBadgeImage", lpparam.classLoader);
         final Class<?> bitsTokenClass = findClass("tv.twitch.android.models.chat.MessageToken$BitsToken", lpparam.classLoader);
@@ -225,7 +225,7 @@ public class Main implements IXposedHookLoadPackage, IXposedHookZygoteInit {
         });
 
         // Inject all badges and emotes into the finished message
-        findAndHookMethod(chatMessageFactoryClass, "a", chatMessageInterfaceClass, boolean.class, boolean.class, boolean.class, int.class, int.class, iClickableUsernameSpanListenerClass, twitchUrlSpanInterfaceClass, webViewDialogFragmentEnumClass, String.class, boolean.class, censoredMessageTrackingInfoClass, Integer.class, new XC_MethodHook() {
+        findAndHookMethod(chatMessageFactoryClass, "a", chatMessageInterfaceClass, boolean.class, boolean.class, boolean.class, int.class, int.class, iClickableUsernameSpanListenerClass, TwitchUrlSpanClickListenerInterfaceClass, webViewDialogFragmentEnumClass, String.class, boolean.class, censoredMessageTrackingInfoClass, Integer.class, new XC_MethodHook() {
             @Override
             protected void  beforeHookedMethod(MethodHookParam param) throws Throwable {
                 if (preferences.bitsCombine() && !chommentModelDelegateClass.isInstance(param.args[0])) {
