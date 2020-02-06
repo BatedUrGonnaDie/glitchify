@@ -107,30 +107,30 @@ public class Main implements IXposedHookLoadPackage, IXposedHookZygoteInit {
 
 
         // These are all the different class definitions that are needed in the function hooking
-        final Class<?> chatControllerClass = findClass("tv.twitch.a.k.c0", lpparam.classLoader);
-        final Class<?> chatUpdaterClass = findClass("tv.twitch.a.k.c0$f", lpparam.classLoader);
-        final Class<?> chatViewPresenterClass = findClass("tv.twitch.a.o.h.g", lpparam.classLoader);
-        final Class<?> messageRecyclerItemClass = findClass("tv.twitch.android.adapters.f.d", lpparam.classLoader);
-        final Class<?> channelChatAdapterClass = findClass("tv.twitch.a.m.e.b0.a", lpparam.classLoader);
-        final Class<?> chatUtilClass = findClass("tv.twitch.a.m.e.y0.d", lpparam.classLoader);
-        final Class<?> deletedMessageClickableSpanClass = findClass("tv.twitch.a.m.e.y0.h", lpparam.classLoader);
-        final Class<?> systemMessageTypeClass = findClass("tv.twitch.a.m.e.b0.g", lpparam.classLoader);
-        final Class<?> chatMessageFactoryClass = findClass("tv.twitch.a.o.a", lpparam.classLoader);
-        final Class<?> clickableUsernameSpanClass = findClass("tv.twitch.a.m.e.y0.f", lpparam.classLoader);
-        final Class<?> iClickableUsernameSpanListenerClass = findClass("tv.twitch.a.m.e.h0.a", lpparam.classLoader);
-        final Class<?> twitchUrlSpanClickListenerInterfaceClass = findClass("tv.twitch.a.m.w.b.p.g", lpparam.classLoader);
-        final Class<?> censoredMessageTrackingInfoClass = findClass("tv.twitch.a.m.e.w0.c", lpparam.classLoader);
+        final Class<?> chatControllerClass = findClass("tv.twitch.android.sdk.c0", lpparam.classLoader);
+        final Class<?> chatUpdaterClass = findClass("tv.twitch.android.sdk.c0$f", lpparam.classLoader);
+        final Class<?> chatViewPresenterClass = findClass("tv.twitch.a.l.d.n", lpparam.classLoader);
+        final Class<?> messageRecyclerItemClass = findClass("tv.twitch.android.adapters.e.b", lpparam.classLoader);
+        final Class<?> channelChatAdapterClass = findClass("tv.twitch.a.l.d.n0.a", lpparam.classLoader);
+        final Class<?> chatUtilClass = findClass("tv.twitch.a.l.d.o1.d", lpparam.classLoader);
+        final Class<?> deletedMessageClickableSpanClass = findClass("tv.twitch.a.l.d.o1.h", lpparam.classLoader);
+        final Class<?> systemMessageTypeClass = findClass("tv.twitch.a.l.d.n0.g", lpparam.classLoader);
+        final Class<?> chatMessageFactoryClass = findClass("tv.twitch.a.l.d.d1.a", lpparam.classLoader);
+        final Class<?> clickableUsernameSpanClass = findClass("tv.twitch.a.l.d.o1.f", lpparam.classLoader);
+        final Class<?> iClickableUsernameSpanListenerClass = findClass("tv.twitch.a.l.d.t0.a", lpparam.classLoader);
+        final Class<?> twitchUrlSpanClickListenerInterfaceClass = findClass("tv.twitch.a.l.v.b.q.g", lpparam.classLoader);
+        final Class<?> censoredMessageTrackingInfoClass = findClass("tv.twitch.a.l.d.m1.c", lpparam.classLoader);
         final Class<?> webViewSourceEnumClass = findClass("tv.twitch.android.models.webview.WebViewSource", lpparam.classLoader);
-        final Class<?> chatMessageInterfaceClass = findClass("tv.twitch.a.m.e.e", lpparam.classLoader);
+        final Class<?> chatMessageInterfaceClass = findClass("tv.twitch.a.l.d.g", lpparam.classLoader);
         final Class<?> chatBadgeImageClass = findClass("tv.twitch.chat.ChatBadgeImage", lpparam.classLoader);
         final Class<?> bitsTokenClass = findClass("tv.twitch.android.models.chat.MessageToken$BitsToken", lpparam.classLoader);
-        final Class<?> cheermotesHelperClass = findClass("tv.twitch.android.shared.bits.w.f", lpparam.classLoader);
-        final Class<?> chommentModelDelegateClass = findClass("tv.twitch.android.models.ChommentModelDelegate", lpparam.classLoader);
+        final Class<?> cheermotesHelperClass = findClass("tv.twitch.android.shared.bits.d0.g", lpparam.classLoader);
+        //final Class<?> chommentModelDelegateClass = findClass("tv.twitch.android.models.ChommentModelDelegate", lpparam.classLoader);
         final Class<?> channelInfoClass = findClass("tv.twitch.android.models.channel.ChannelInfo", lpparam.classLoader);
         final Class<?> streamTypeClass = findClass("tv.twitch.android.models.streams.StreamType", lpparam.classLoader);
         //noinspection unchecked
-        final Class<? extends Enum> mediaSpanClass = (Class<? extends Enum>) findClass("tv.twitch.a.m.w.b.p.d", lpparam.classLoader);
-        final Class<?> vodPlayerPresenterClass = findClass("tv.twitch.a.m.p.l0.x", lpparam.classLoader);
+        final Class<? extends Enum> mediaSpanClass = (Class<? extends Enum>) findClass("tv.twitch.a.l.v.b.q.d", lpparam.classLoader);
+        final Class<?> vodPlayerPresenterClass = findClass("tv.twitch.a.l.p.j0.w", lpparam.classLoader);
         final Class<?> vodModelClass = findClass("tv.twitch.android.models.videos.VodModel", lpparam.classLoader);
         final Class<?> videoAdManagerClass = findClass("tv.twitch.android.player.ads.VideoAdManager", lpparam.classLoader);
         // Updated combined bits insertion object field to find bits helper in ChatMessageFactory
@@ -183,7 +183,7 @@ public class Main implements IXposedHookLoadPackage, IXposedHookZygoteInit {
         });
 
         // Add timestamps to the beginning of every message
-        findAndHookConstructor(messageRecyclerItemClass, "androidx.fragment.app.FragmentActivity", String.class, int.class, String.class, String.class, int.class, Spanned.class, systemMessageTypeClass, float.class, int.class, float.class, boolean.class, new XC_MethodHook() {
+        findAndHookConstructor(messageRecyclerItemClass, "android.content.Context", String.class, int.class, String.class, String.class, int.class, Spanned.class, systemMessageTypeClass, float.class, int.class, float.class, boolean.class, new XC_MethodHook() {
             @Override
             protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
                 if (preferences.showTimeStamps()) {
@@ -228,7 +228,8 @@ public class Main implements IXposedHookLoadPackage, IXposedHookZygoteInit {
         findAndHookMethod(chatMessageFactoryClass, "a", chatMessageInterfaceClass, boolean.class, boolean.class, boolean.class, int.class, int.class, iClickableUsernameSpanListenerClass, twitchUrlSpanClickListenerInterfaceClass, webViewSourceEnumClass, String.class, boolean.class, censoredMessageTrackingInfoClass, Integer.class, new XC_MethodHook() {
             @Override
             protected void  beforeHookedMethod(MethodHookParam param) throws Throwable {
-                if (preferences.bitsCombine() && !chommentModelDelegateClass.isInstance(param.args[0])) {
+                //if (preferences.bitsCombine() && !chommentModelDelegateClass.isInstance(param.args[0])) {
+                if (preferences.bitsCombine()) {
                     setAdditionalInstanceField(param.thisObject, "allowBitInsertion", false);
                 }
                 if (preferences.colorAdjust()) {
@@ -256,7 +257,8 @@ public class Main implements IXposedHookLoadPackage, IXposedHookZygoteInit {
                     msg = injectEmotes(param, mediaSpanClass, msg, bttvGlobalEmotes);
                     msg = injectEmotes(param, mediaSpanClass, msg, bttvRoomEmotes);
                 }
-                if (preferences.bitsCombine() && !chommentModelDelegateClass.isInstance(param.args[0])) {
+                //if (preferences.bitsCombine() && !chommentModelDelegateClass.isInstance(param.args[0])) {
+                if (preferences.bitsCombine()) {
                     setAdditionalInstanceField(param.thisObject, "allowBitInsertion", true);
                     Object chatMessageInfo = getObjectField(param.args[0], "a");
                     int numBits = getIntField(chatMessageInfo, "numBitsSent");
@@ -316,7 +318,7 @@ public class Main implements IXposedHookLoadPackage, IXposedHookZygoteInit {
     }
 
     private SpannableStringBuilder injectBadges(XC_MethodHook.MethodHookParam param, Class mediaSpanClass, SpannableStringBuilder chatMsg, Hashtable customBadges) {
-        String chatSender = (String) callMethod(param.args[0], "getUserName");
+        String chatSender = (String) callMethod(param.args[0], "b");
         int location = 0;
         while (chatMsg.toString().indexOf(".", location) == location) { location += 2; }
         if (location >= 6) { return chatMsg; }
@@ -334,7 +336,7 @@ public class Main implements IXposedHookLoadPackage, IXposedHookZygoteInit {
                 continue;
             }
             String url = (String) ((Hashtable) customBadges.get(keyString)).get("image");
-            SpannableString badgeSpan = (SpannableString) callMethod(param.thisObject, "a", param.thisObject, url, Enum.valueOf(mediaSpanClass, "Badge"), null, true, 4, null);
+            SpannableString badgeSpan = (SpannableString) callMethod(param.thisObject, "a", param.thisObject, url, Enum.valueOf(mediaSpanClass, "Badge"), url, null, true, 4, null);
             chatMsg.insert(location, badgeSpan);
             location += 2;
             badgeCount++;
@@ -364,7 +366,7 @@ public class Main implements IXposedHookLoadPackage, IXposedHookZygoteInit {
                 }
                 //noinspection ConstantConditions
                 String url = customEmoteHash.get(keyString).toString();
-                SpannableString emoteSpan = (SpannableString) callMethod(param.thisObject, "a", param.thisObject, url, Enum.valueOf(mediaSpanClass, "Emote"), null, false, 12, null);
+                SpannableString emoteSpan = (SpannableString) callMethod(param.thisObject, "a", param.thisObject, url, Enum.valueOf(mediaSpanClass, "Emote"), url, null, false, 12, null);
                 chatMsg.replace(location, location + keyLength, emoteSpan);
             }
         }
