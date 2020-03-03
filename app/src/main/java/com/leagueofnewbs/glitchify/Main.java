@@ -508,9 +508,16 @@ public class Main implements IXposedHookLoadPackage, IXposedHookZygoteInit {
         }
 
         JSONArray roomEmotesArray = roomEmotes.getJSONArray("channelEmotes");
+        JSONArray sharedEmotesArray = roomEmotes.getJSONArray("sharedEmotes");
         for (int i = 0; i < roomEmotesArray.length(); ++i) {
             String emoteName = roomEmotesArray.getJSONObject(i).getString("code");
             String emoteID   = roomEmotesArray.getJSONObject(i).getString("id");
+            String emoteURL  = bttvUrlTemplate.replace("{{id}}", emoteID).replace("{{image}}", "1x");
+            bttvRoomEmotes.put(emoteName, emoteURL);
+        }
+        for (int i = 0; i < sharedEmotesArray.length(); ++i) {
+            String emoteName = sharedEmotesArray.getJSONObject(i).getString("code");
+            String emoteID   = sharedEmotesArray.getJSONObject(i).getString("id");
             String emoteURL  = bttvUrlTemplate.replace("{{id}}", emoteID).replace("{{image}}", "1x");
             bttvRoomEmotes.put(emoteName, emoteURL);
         }
