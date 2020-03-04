@@ -108,30 +108,31 @@ public class Main implements IXposedHookLoadPackage, IXposedHookZygoteInit {
 
 
         // These are all the different class definitions that are needed in the function hooking
-        final Class<?> chatControllerClass = findClass("tv.twitch.android.sdk.c0", lpparam.classLoader);
-        final Class<?> chatUpdaterClass = findClass("tv.twitch.android.sdk.c0$f", lpparam.classLoader);
-        final Class<?> chatViewPresenterClass = findClass("tv.twitch.a.l.d.n", lpparam.classLoader);
-        final Class<?> messageRecyclerItemClass = findClass("tv.twitch.android.adapters.e.b", lpparam.classLoader);
-        final Class<?> channelChatAdapterClass = findClass("tv.twitch.a.l.d.n0.a", lpparam.classLoader);
-        final Class<?> chatUtilClass = findClass("tv.twitch.a.l.d.o1.d", lpparam.classLoader);
-        final Class<?> deletedMessageClickableSpanClass = findClass("tv.twitch.a.l.d.o1.h", lpparam.classLoader);
-        final Class<?> systemMessageTypeClass = findClass("tv.twitch.a.l.d.n0.g", lpparam.classLoader);
-        final Class<?> chatMessageFactoryClass = findClass("tv.twitch.a.l.d.d1.a", lpparam.classLoader);
-        final Class<?> clickableUsernameSpanClass = findClass("tv.twitch.a.l.d.o1.f", lpparam.classLoader);
-        final Class<?> iClickableUsernameSpanListenerClass = findClass("tv.twitch.a.l.d.t0.a", lpparam.classLoader);
-        final Class<?> twitchUrlSpanClickListenerInterfaceClass = findClass("tv.twitch.a.l.v.b.q.g", lpparam.classLoader);
-        final Class<?> censoredMessageTrackingInfoClass = findClass("tv.twitch.a.l.d.m1.c", lpparam.classLoader);
+        final Class<?> chatControllerClass = findClass("tv.twitch.android.sdk.z", lpparam.classLoader);
+        final Class<?> chatUpdaterClass = findClass("tv.twitch.android.sdk.z$f", lpparam.classLoader);
+        final Class<?> chatViewPresenterClass = findClass("tv.twitch.a.k.e.n", lpparam.classLoader);
+        final Class<?> messageRecyclerItemClass = findClass("tv.twitch.android.adapters.a.b", lpparam.classLoader);
+        final Class<?> channelChatAdapterClass = findClass("tv.twitch.a.k.e.o0.a", lpparam.classLoader);
+        final Class<?> chatUtilClass = findClass("tv.twitch.a.k.e.p1.g", lpparam.classLoader);
+        final Class<?> deletedMessageClickableSpanClass = findClass("tv.twitch.a.k.e.p1.l", lpparam.classLoader);
+        final Class<?> systemMessageTypeClass = findClass("tv.twitch.a.k.e.o0.g", lpparam.classLoader);
+        final Class<?> chatMessageFactoryClass = findClass("tv.twitch.a.k.e.e1.a", lpparam.classLoader);
+        final Class<?> clickableUsernameSpanClass = findClass("tv.twitch.a.k.e.p1.j", lpparam.classLoader);
+        final Class<?> iClickableUsernameSpanListenerClass = findClass("tv.twitch.a.k.e.u0.a", lpparam.classLoader);
+        final Class<?> twitchUrlSpanClickListenerInterfaceClass = findClass("tv.twitch.a.k.w.b.q.g", lpparam.classLoader);
+        final Class<?> censoredMessageTrackingInfoClass = findClass("tv.twitch.a.k.e.n1.c", lpparam.classLoader);
         final Class<?> webViewSourceEnumClass = findClass("tv.twitch.android.models.webview.WebViewSource", lpparam.classLoader);
-        final Class<?> chatMessageInterfaceClass = findClass("tv.twitch.a.l.d.g", lpparam.classLoader);
+        final Class<?> chatMessageInterfaceClass = findClass("tv.twitch.a.k.e.g", lpparam.classLoader);
         final Class<?> chatBadgeImageClass = findClass("tv.twitch.chat.ChatBadgeImage", lpparam.classLoader);
         final Class<?> bitsTokenClass = findClass("tv.twitch.android.models.chat.MessageToken$BitsToken", lpparam.classLoader);
-        final Class<?> cheermotesHelperClass = findClass("tv.twitch.android.shared.bits.d0.g", lpparam.classLoader);
-        final Class<?> chommentModelDelegateClass = findClass("tv.twitch.a.l.d.u0.c", lpparam.classLoader);
+        final Class<?> cheermotesHelperClass = findClass("tv.twitch.a.k.d.a0.h", lpparam.classLoader);
+        final Class<?> chommentModelDelegateClass = findClass("tv.twitch.a.k.e.v0.c", lpparam.classLoader);
+        final Class<?> EventDispatcherClass = findClass("tv.twitch.android.core.mvp.viewdelegate.EventDispatcher", lpparam.classLoader);
         final Class<?> channelInfoClass = findClass("tv.twitch.android.models.channel.ChannelInfo", lpparam.classLoader);
         final Class<?> streamTypeClass = findClass("tv.twitch.android.models.streams.StreamType", lpparam.classLoader);
         //noinspection unchecked
-        final Class<? extends Enum> mediaSpanClass = (Class<? extends Enum>) findClass("tv.twitch.a.l.v.b.q.d", lpparam.classLoader);
-        final Class<?> vodPlayerPresenterClass = findClass("tv.twitch.a.l.p.j0.w", lpparam.classLoader);
+        final Class<? extends Enum> mediaSpanClass = (Class<? extends Enum>) findClass("tv.twitch.a.k.w.b.q.d", lpparam.classLoader);
+        final Class<?> vodPlayerPresenterClass = findClass("tv.twitch.a.k.q.j0.v", lpparam.classLoader);
         final Class<?> vodModelClass = findClass("tv.twitch.android.models.videos.VodModel", lpparam.classLoader);
         final Class<?> videoAdManagerClass = findClass("tv.twitch.android.player.ads.VideoAdManager", lpparam.classLoader);
         // Updated combined bits insertion object field to find bits helper in ChatMessageFactory
@@ -228,7 +229,7 @@ public class Main implements IXposedHookLoadPackage, IXposedHookZygoteInit {
         });
 
         // Inject all badges and emotes into the finished message
-        findAndHookMethod(chatMessageFactoryClass, "a", chatMessageInterfaceClass, boolean.class, boolean.class, boolean.class, int.class, int.class, iClickableUsernameSpanListenerClass, twitchUrlSpanClickListenerInterfaceClass, webViewSourceEnumClass, String.class, boolean.class, censoredMessageTrackingInfoClass, Integer.class, new XC_MethodHook() {
+        findAndHookMethod(chatMessageFactoryClass, "a", chatMessageInterfaceClass, boolean.class, boolean.class, boolean.class, int.class, int.class, iClickableUsernameSpanListenerClass, twitchUrlSpanClickListenerInterfaceClass, webViewSourceEnumClass, String.class, boolean.class, censoredMessageTrackingInfoClass, Integer.class, EventDispatcherClass, new XC_MethodHook() {
             @Override
             protected void  beforeHookedMethod(MethodHookParam param) throws Throwable {
                 if (preferences.bitsCombine() && !chommentModelDelegateClass.isInstance(param.args[0])) {
