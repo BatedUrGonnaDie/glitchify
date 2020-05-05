@@ -16,6 +16,7 @@ class Preferences {
         pref.put("ffzModeBadgeScale", 1);
         pref.put("bttvEmotes", prefs.getBoolean("bttv_emotes_enable", true));
         pref.put("bttvBadges", prefs.getBoolean("bttv_badges_enable", true));
+        pref.put("disableGifEmotes", prefs.getBoolean("disable_gif", false));
         pref.put("bitsCombine", prefs.getBoolean("bits_combine_enable", true));
         pref.put("hiddenBadges", new ArrayList<String>());
         String hiddenBadges = prefs.getString("badge_hiding_enable", "");
@@ -70,6 +71,10 @@ class Preferences {
 
     boolean bttvBadges() {
         return (boolean) pref.get("bttvBadges");
+    }
+
+    boolean disableGifEmotes() {
+        return (boolean) pref.get("disableGifEmotes");
     }
 
     boolean bitsCombine() {

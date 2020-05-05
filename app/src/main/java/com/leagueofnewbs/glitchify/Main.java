@@ -489,10 +489,12 @@ public class Main implements IXposedHookLoadPackage, IXposedHookZygoteInit {
         }
 
         for (int i = 0; i < globalEmotesArray.length(); ++i) {
-            String emoteName = globalEmotesArray.getJSONObject(i).getString("code");
-            String emoteID   = globalEmotesArray.getJSONObject(i).getString("id");
-            String emoteURL  = bttvUrlTemplate.replace("{{id}}", emoteID).replace("{{image}}", "1x");
-            bttvGlobalEmotes.put(emoteName, emoteURL);
+            if(!(preferences.disableGifEmotes() && globalEmotesArray.getJSONObject(i).getString("imageType").equals("gif"))) {
+                String emoteName = globalEmotesArray.getJSONObject(i).getString("code");
+                String emoteID = globalEmotesArray.getJSONObject(i).getString("id");
+                String emoteURL = bttvUrlTemplate.replace("{{id}}", emoteID).replace("{{image}}", "1x");
+                bttvGlobalEmotes.put(emoteName, emoteURL);
+            }
         }
     }
 
@@ -511,16 +513,20 @@ public class Main implements IXposedHookLoadPackage, IXposedHookZygoteInit {
         JSONArray roomEmotesArray = roomEmotes.getJSONArray("channelEmotes");
         JSONArray sharedEmotesArray = roomEmotes.getJSONArray("sharedEmotes");
         for (int i = 0; i < roomEmotesArray.length(); ++i) {
-            String emoteName = roomEmotesArray.getJSONObject(i).getString("code");
-            String emoteID   = roomEmotesArray.getJSONObject(i).getString("id");
-            String emoteURL  = bttvUrlTemplate.replace("{{id}}", emoteID).replace("{{image}}", "1x");
-            bttvRoomEmotes.put(emoteName, emoteURL);
+            if(!(preferences.disableGifEmotes() && roomEmotesArray.getJSONObject(i).getString("imageType").equals("gif"))) {
+                String emoteName = roomEmotesArray.getJSONObject(i).getString("code");
+                String emoteID = roomEmotesArray.getJSONObject(i).getString("id");
+                String emoteURL = bttvUrlTemplate.replace("{{id}}", emoteID).replace("{{image}}", "1x");
+                bttvRoomEmotes.put(emoteName, emoteURL);
+            }
         }
         for (int i = 0; i < sharedEmotesArray.length(); ++i) {
-            String emoteName = sharedEmotesArray.getJSONObject(i).getString("code");
-            String emoteID   = sharedEmotesArray.getJSONObject(i).getString("id");
-            String emoteURL  = bttvUrlTemplate.replace("{{id}}", emoteID).replace("{{image}}", "1x");
-            bttvRoomEmotes.put(emoteName, emoteURL);
+            if(!(preferences.disableGifEmotes() && sharedEmotesArray.getJSONObject(i).getString("imageType").equals("gif"))) {
+                String emoteName = sharedEmotesArray.getJSONObject(i).getString("code");
+                String emoteID = sharedEmotesArray.getJSONObject(i).getString("id");
+                String emoteURL = bttvUrlTemplate.replace("{{id}}", emoteID).replace("{{image}}", "1x");
+                bttvRoomEmotes.put(emoteName, emoteURL);
+            }
         }
     }
 
