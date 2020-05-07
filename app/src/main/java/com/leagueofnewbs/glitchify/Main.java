@@ -110,29 +110,29 @@ public class Main implements IXposedHookLoadPackage, IXposedHookZygoteInit {
         // These are all the different class definitions that are needed in the function hooking
         final Class<?> chatControllerClass = findClass("tv.twitch.android.sdk.z", lpparam.classLoader);
         final Class<?> chatUpdaterClass = findClass("tv.twitch.android.sdk.z$f", lpparam.classLoader);
-        final Class<?> chatViewPresenterClass = findClass("tv.twitch.a.k.e.n", lpparam.classLoader);
+        final Class<?> chatViewPresenterClass = findClass("tv.twitch.a.k.g.n", lpparam.classLoader);
         final Class<?> messageRecyclerItemClass = findClass("tv.twitch.android.adapters.a.b", lpparam.classLoader);
-        final Class<?> channelChatAdapterClass = findClass("tv.twitch.a.k.e.n0.a", lpparam.classLoader);
-        final Class<?> chatUtilClass = findClass("tv.twitch.a.k.e.q1.g", lpparam.classLoader);
-        final Class<?> deletedMessageClickableSpanClass = findClass("tv.twitch.a.k.e.q1.l", lpparam.classLoader);
-        final Class<?> systemMessageTypeClass = findClass("tv.twitch.a.k.e.n0.g", lpparam.classLoader);
-        final Class<?> chatMessageFactoryClass = findClass("tv.twitch.a.k.e.e1.a", lpparam.classLoader);
-        final Class<?> clickableUsernameSpanClass = findClass("tv.twitch.a.k.e.q1.j", lpparam.classLoader);
-        final Class<?> iClickableUsernameSpanListenerClass = findClass("tv.twitch.a.k.e.t0.a", lpparam.classLoader);
-        final Class<?> twitchUrlSpanClickListenerInterfaceClass = findClass("tv.twitch.a.k.x.b.r.g", lpparam.classLoader);
-        final Class<?> censoredMessageTrackingInfoClass = findClass("tv.twitch.a.k.e.o1.c", lpparam.classLoader);
+        final Class<?> channelChatAdapterClass = findClass("tv.twitch.a.k.g.n0.a", lpparam.classLoader);
+        final Class<?> chatUtilClass = findClass("tv.twitch.a.k.g.r1.g", lpparam.classLoader);
+        final Class<?> deletedMessageClickableSpanClass = findClass("tv.twitch.a.k.g.r1.l", lpparam.classLoader);
+        final Class<?> systemMessageTypeClass = findClass("tv.twitch.a.k.g.n0.g", lpparam.classLoader);
+        final Class<?> chatMessageFactoryClass = findClass("tv.twitch.a.k.g.e1.a", lpparam.classLoader);
+        final Class<?> clickableUsernameSpanClass = findClass("tv.twitch.a.k.g.r1.j", lpparam.classLoader);
+        final Class<?> iClickableUsernameSpanListenerClass = findClass("tv.twitch.a.k.g.t0.a", lpparam.classLoader);
+        final Class<?> twitchUrlSpanClickListenerInterfaceClass = findClass("tv.twitch.a.k.c0.b.s.g", lpparam.classLoader);
+        final Class<?> censoredMessageTrackingInfoClass = findClass("tv.twitch.a.k.g.p1.c", lpparam.classLoader);
         final Class<?> webViewSourceEnumClass = findClass("tv.twitch.android.models.webview.WebViewSource", lpparam.classLoader);
-        final Class<?> chatMessageInterfaceClass = findClass("tv.twitch.a.k.e.g", lpparam.classLoader);
+        final Class<?> chatMessageInterfaceClass = findClass("tv.twitch.a.k.g.g", lpparam.classLoader);
         final Class<?> chatBadgeImageClass = findClass("tv.twitch.chat.ChatBadgeImage", lpparam.classLoader);
         final Class<?> bitsTokenClass = findClass("tv.twitch.android.models.chat.MessageToken$BitsToken", lpparam.classLoader);
         final Class<?> cheermotesHelperClass = findClass("tv.twitch.a.k.d.a0.h", lpparam.classLoader);
-        final Class<?> chommentModelDelegateClass = findClass("tv.twitch.a.k.e.u0.c", lpparam.classLoader);
+        final Class<?> chommentModelDelegateClass = findClass("tv.twitch.a.k.g.u0.c", lpparam.classLoader);
         final Class<?> EventDispatcherClass = findClass("tv.twitch.android.core.mvp.viewdelegate.EventDispatcher", lpparam.classLoader);
         final Class<?> channelInfoClass = findClass("tv.twitch.android.models.channel.ChannelInfo", lpparam.classLoader);
         final Class<?> streamTypeClass = findClass("tv.twitch.android.models.streams.StreamType", lpparam.classLoader);
         //noinspection unchecked
-        final Class<? extends Enum> mediaSpanClass = (Class<? extends Enum>) findClass("tv.twitch.a.k.x.b.r.d", lpparam.classLoader);
-        final Class<?> vodPlayerPresenterClass = findClass("tv.twitch.a.k.q.j0.v", lpparam.classLoader);
+        final Class<? extends Enum> mediaSpanClass = (Class<? extends Enum>) findClass("tv.twitch.a.k.c0.b.s.d", lpparam.classLoader);
+        final Class<?> vodPlayerPresenterClass = findClass("tv.twitch.a.k.v.j0.w", lpparam.classLoader);
         final Class<?> vodModelClass = findClass("tv.twitch.android.models.videos.VodModel", lpparam.classLoader);
         final Class<?> videoAdManagerClass = findClass("tv.twitch.android.player.ads.VideoAdManager", lpparam.classLoader);
         // Updated combined bits insertion object field to find bits helper in ChatMessageFactory
@@ -489,10 +489,12 @@ public class Main implements IXposedHookLoadPackage, IXposedHookZygoteInit {
         }
 
         for (int i = 0; i < globalEmotesArray.length(); ++i) {
-            String emoteName = globalEmotesArray.getJSONObject(i).getString("code");
-            String emoteID   = globalEmotesArray.getJSONObject(i).getString("id");
-            String emoteURL  = bttvUrlTemplate.replace("{{id}}", emoteID).replace("{{image}}", "1x");
-            bttvGlobalEmotes.put(emoteName, emoteURL);
+            if(!(preferences.disableGifEmotes() && globalEmotesArray.getJSONObject(i).getString("imageType").equals("gif"))) {
+                String emoteName = globalEmotesArray.getJSONObject(i).getString("code");
+                String emoteID = globalEmotesArray.getJSONObject(i).getString("id");
+                String emoteURL = bttvUrlTemplate.replace("{{id}}", emoteID).replace("{{image}}", "1x");
+                bttvGlobalEmotes.put(emoteName, emoteURL);
+            }
         }
     }
 
@@ -511,16 +513,20 @@ public class Main implements IXposedHookLoadPackage, IXposedHookZygoteInit {
         JSONArray roomEmotesArray = roomEmotes.getJSONArray("channelEmotes");
         JSONArray sharedEmotesArray = roomEmotes.getJSONArray("sharedEmotes");
         for (int i = 0; i < roomEmotesArray.length(); ++i) {
-            String emoteName = roomEmotesArray.getJSONObject(i).getString("code");
-            String emoteID   = roomEmotesArray.getJSONObject(i).getString("id");
-            String emoteURL  = bttvUrlTemplate.replace("{{id}}", emoteID).replace("{{image}}", "1x");
-            bttvRoomEmotes.put(emoteName, emoteURL);
+            if(!(preferences.disableGifEmotes() && roomEmotesArray.getJSONObject(i).getString("imageType").equals("gif"))) {
+                String emoteName = roomEmotesArray.getJSONObject(i).getString("code");
+                String emoteID = roomEmotesArray.getJSONObject(i).getString("id");
+                String emoteURL = bttvUrlTemplate.replace("{{id}}", emoteID).replace("{{image}}", "1x");
+                bttvRoomEmotes.put(emoteName, emoteURL);
+            }
         }
         for (int i = 0; i < sharedEmotesArray.length(); ++i) {
-            String emoteName = sharedEmotesArray.getJSONObject(i).getString("code");
-            String emoteID   = sharedEmotesArray.getJSONObject(i).getString("id");
-            String emoteURL  = bttvUrlTemplate.replace("{{id}}", emoteID).replace("{{image}}", "1x");
-            bttvRoomEmotes.put(emoteName, emoteURL);
+            if(!(preferences.disableGifEmotes() && sharedEmotesArray.getJSONObject(i).getString("imageType").equals("gif"))) {
+                String emoteName = sharedEmotesArray.getJSONObject(i).getString("code");
+                String emoteID = sharedEmotesArray.getJSONObject(i).getString("id");
+                String emoteURL = bttvUrlTemplate.replace("{{id}}", emoteID).replace("{{image}}", "1x");
+                bttvRoomEmotes.put(emoteName, emoteURL);
+            }
         }
     }
 

@@ -27,6 +27,9 @@
     <string name="preference_bttv_badges_title">Enable Badges</string>
     <string name="preference_bttv_badges_summary">Show badges in chat</string>
 
+    <string name="preference_bttv_gif_enable">disable_gif</string>
+    <string name="preference_bttv_gif_title">Disable Gif Emotes</string>
+    <string name="preference_bttv_gif_summary">Disable all Gif Emotes</string>
 
     <string name="preference_badges">Badges</string>
     <string name="preference_badge_hiding_enable">badge_hiding_enable</string>
